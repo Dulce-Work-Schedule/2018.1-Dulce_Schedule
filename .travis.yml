@@ -22,7 +22,7 @@ matrix:
         - cd $TRAVIS_BUILD_DIR/Docker/Test
         - sudo docker-compose -f build.yml build
         - sudo docker-compose -f start-deps.yml up -d
-        - sudo docker-compose -f start-user.yml up -d
+        - sudo docker-compose -f start-schedule.yml up -d
 
       after_success:
-        - sudo docker exec -it -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} test_userserver_1 npm run coverage
+        - sudo docker exec -it -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} test_scheduleserver_1 npm run coverage

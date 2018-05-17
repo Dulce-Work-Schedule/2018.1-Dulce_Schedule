@@ -23,7 +23,7 @@ $ sudo docker-compose -f start-deps.yml up -d
 ```
 
 ```bash
-$ sudo docker-compose -f start-user.yml up -d
+$ sudo docker-compose -f start-schedule.yml up -d
 ```
 Pronto o seu ambiente de trabalho já está funcionando, acessar o ambiente de teste pelo terminal digite o seguinte comando:
 
@@ -41,10 +41,7 @@ $ cd 2018.1-Dulce_User/Docker/Test
 $ sudo docker-compose -f build.yml  build
 ```
 ```bash
-$ sudo docker-compose -f start-deps.yml up -d
-```
-```bash
-$ sudo docker-compose -f start-user.yml up -d
+$ sudo docker-compose -f start-schedule.yml up -d
 ```
 Pronto o seu ambiente de trabalho já está funcionando, acessar o ambiente de teste pelo terminal digite o seguinte comando:
 
