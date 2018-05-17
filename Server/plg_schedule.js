@@ -23,6 +23,9 @@ module.exports = function(options){
           }
       })
     })
+    schedule.save$(function(err,schedule){
+      respond(null, schedule)
+    })
   })
 
     this.add('role:schedule, cmd:listSchedule', function (msg, respond) {

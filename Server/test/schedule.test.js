@@ -22,11 +22,12 @@ describe('Create schedule', function() {
       role: "schedule",
       cmd: "create",
       date: "09/04/2018",
-      start_time: "19:00",
-      end_time: "00:00",
+      start_time: "06:00",
+      end_time: "10:00",
       sector: "emergência",
       employee: "Gustavo",
       specialty: "Oncologista",
+      amount_of_hours : 4,
       manager: true
     }, function(err, result){
       expect(result.sector).to.equal("emergência")
