@@ -1,140 +1,60 @@
-# Dulce-API
-
-Dulce-API provê API's para o desenvolvimento de Apps utilizando microsserviços.
-Cada API descreve apenas uma funcionalidade de um sistema, isso torna a aplicação modular e favorece o baixo acoplamento.
-
-Microsserviços é uma estratégia de arquitetura de software que vem sendo aplicada há alguns anos com o objetivo de proporcionar uma melhor escalabilidade aos serviços. Ao projetar esse novo modelo arquitetural, os princípios de orientação a objetos, desacoplamento e responsabilidades tornam-se fundamentais.
-
-O conceito principal dentro do microsserviços é estabelecer pequenos serviços que possam funcionar de forma independente, permitindo assim a sua escala por serviço e, permitindo inclusive garantir o funcionamento da operação mesmo em caso de falha de um determinado serviço.
-
-## Instalação e uso
-
-#### Instalação do Docker
-
-***DOCKER - na pasta do projeto***
-
-    sudo apt-get update
-
-    sudo apt-get install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
-
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
-    sudo apt-key fingerprint 0EBFCD88
-
-    sudo add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-    $(lsb_release -cs) \
-    stable"
-
-    sudo apt-get update
-
-    sudo apt-get install docker-ce
+### Para mais informações visite nossa página [Dulce](https://dulce-work-schedule.github.io/2018.1-Dulce_App/)
+# Schedule
 
 
-Para utilizar as API disponíveis e customizá-las para se adequar ao seu sistema, basta seguir os seguintes passos :
+### Microsserviços de gerenciamento de usuário
 
-Clone o repositório utilizando o comando (o símbolo "$" não deve ser copiado. Apenas indica que tal comando
-deve ser digitado em seu terminal) :
+Para contribuir com esse mircosserviço você deve seguir as seguintes instruções:  
 
-    $ git clone origin https://github.com/fga-gpp-mds/2018.1-Dulce_API
+###### 1 - Primeiro leia o nosso [guia de contribuição](CONTRIBUTING.md) onde são explicados todos os passos para contribuir. Ahh, não esquece de ler nosso [código de conduta](CODE_OF_CONDUCT.md).   
+Caso reste duvidas você também pode entrar em contato conosco criando uma issue ou pelo email dulce.application@gmail.com.  
 
-Entre no diretório em que há o arquivo Dockerfile. Se você estiver utilizando o terminal linux, basta digitar :
+###### 2 - Em seguida siga os comandos para executar o ambiente de produção:  
 
-    $ cd 2018.1-Dulce_API/DataBase
+```bash
+$ cd 2018.1-Dulce_Schedule/Docker/Dev
+```
+```bash
+$ sudo docker-compose -f build.yml  build  
+```
 
-Observe que há um arquivo Dockerfile neste diretório. Agora basta digitar os seguintes comandos :
+```bash
+$ sudo docker-compose -f start-deps.yml up -d
+```
 
-    $ sudo docker-compose up --build
+```bash
+$ sudo docker-compose -f start-schedule.yml up -d
+```
+Pronto o seu ambiente de trabalho já está funcionando, acessar o ambiente de teste pelo terminal digite o seguinte comando:
 
-Após executar o docker, abra uma nova aba no terminal e digite os seguintes comandos:
+```bash
+$ sudo docker exec -it **NomeDoServiço** bash
+```
 
-     $ cd RabbitMQ
-     $ sudo docker-compose up --build
-
-Em seguida, partindo da raiz do diretório para cadastrar usuários e outras funcionalidades relacionadas
-
-    $ cd User
-
-Para executar o arquivo Dockerfile de User abra uma nova aba no terminal e digite:
-
-    $ sudo docker-compose up --build
-
-Já para o login, após o funcionamento do Dockerfile de DataBase:
-
-    $ cd Login
-
-E execute o Dockerfile contido nele abra uma nova aba no terminal e digite:
-
-    $ sudo docker-compose up --build
-
-Nesse caso, esse Dockerfile será utilizado para fazer apenas login de usuários.
-
-Acesse no seu navegador a porta 8080
-do servidor local por meio do link [localhost:8080](http://localhost:8080) para o DataBase, já para o Login ou User deve-se utilizar [localhost:8081](http://localhost:8081)
-
-* Ao abrir o link a seguinte mensagem será exibida: `{"success":false,"message":"No token provided."}`, significa que o acesso foi concluído. Porém, para ter acesso é necessário o token de usuário.
-
-## Postman
-
-Para testar os métodos HTTP de requisições, basta utilizar a aplicação [Postman](https://www.getpostman.com/),
-que permite o envio e recebimento dados via requisições HTTP.
-.
-
-#### Requisições
-
-*  Para adicionar um usuário através do Postman, devemos digitar a seguinte rota: `http://localhost:8080/api/userManager/create`
-
-O método para adicionar usuario deve ser o ***POST*** e na subseção ***BODY*** deve conter os respectivos atributos do usuario, que são:
-name, registration, sector, hospital, password.
-Non
-Ao clicar em ***SEND*** , será exibido um ***JSON*** com as informações do usuario , isso confirmará o cadastro do usuário.
+#### Para rodar e escrever os testes você deve abrir o docker de testes, para isso siga as sguintes instruções:
 
 
- * Para logar um usuário através do Postman, devemos digitar a seguinte rota: `http://localhost:8081/api/userManager/login`
+```bash
+$ cd 2018.1-Dulce_Schedule/Docker/Test
+```
+```bash
+$ sudo docker-compose -f build.yml  build
+```
+```bash
+$ sudo docker-compose -f start-schedule.yml up -d
+```
+Pronto o seu ambiente de trabalho já está funcionando, acessar o ambiente de teste pelo terminal digite o seguinte comando:
 
- O método para ***LOGIN***, deve ser o ***POST*** e na subseção ***BODY*** deve conter os atributos registration , password.
+```bash
+$ sudo docker exec -it **NomeDoServiço** bash
+```
 
-Ao clicar em ***SEND*** , será exibido um ***JSON*** com o status de sucesso ao logar , uma messagem indicando sucesso , o token, id do usuario , isso confirmará o sucesso ao logar o usuário.
+#### Para fechar e encerrar os dockers utilize o seguinte comando:
+OBS: esse comando para todos os dockers que estão rodando em sua máquina.
 
-* Para Visualizar um usuário através do Postman, devemos digitar a seguinte rota: `http://localhost:8080/api/userManager/listById`, o id e gerado no momento da criação do usuário.
+```bash
+$ sudo docker stop $(sudo docker ps -q)
+```
 
-O método para ***VIEW***, deve ser o ***GET*** .
-
-Ao clicar em ***SEND*** , será exibido um ***JSON*** , informando o sucesso ou a falha da visualização e uma mensagem.
-
-No caso acima , houve falha pois para acessar a visualizaçao é necessário um token do usuário.
-
-Para ter sucesso ao visualizar a informações do usuario logado , na subseção HEADERS deverá conter `x-access-token` tendo o valor do token válido  do usuário, com isso será possível obter sucesso na visualização.
-
-* Para Editar um usuário através do Postman, devemos digitar a seguinte rota: `http://localhost:8080/api/userManager/editUser`, o id e gerado no momento da criação do usuário.
-
-O método para editar usuario deve ser o ***PUT*** e na subseção ***BODY*** deve conter os respectivos atributos do usuario que serão editados.
-
-Ao clicar em ***SEND*** , será exibido um ***JSON*** com status e mensagem indicando sucesso ou falha na edição
-
-No caso acima , houve falha pois para acessar a edição é necessário um token do usuário ao qual terá o perfil editado.
-
-Para ter sucesso ao editar a informações do usuario logado , na subseção HEADERS deverá conter `x-access-token` tendo o valor do token válido  do usuário, com isso será possível obter sucesso na edição.
-
-* Para Visualizar todos os usuário através do Postman, devemos digitar a seguinte rota: `http://localhost:8080/api/userManager/listUser`.
-
-O método para visualizar todos os usuarios deve ser o ***GET*** e na subseção ***BODY*** deve conter o token.
-
-No caso acima , houve falha pois para acessar a visualização da lista de usuários é necessário um token do usuário logado.
-
-Para ter sucesso ao visualizar a lista de usuários, o usuario logado, na subseção HEADERS deverá conter `x-access-token` tendo o valor do token válido  do usuário, com isso será possível obter sucesso na visualização da lista de usuários.
-
-
-##### Requisições externas
-
-Para uso da API se faz necessário o uso do ***DOCKER*** portanto , para a utilização do localhost , o IP será `172.18.0.1`.
-
-## Links
-
-Para ir para o projeto oficial clique <a href="https://github.com/fga-gpp-mds/2018.1-Dulce_App">aqui</a>
-
-Para ir para o github pages do projeto clique <a href= 'https://fga-gpp-mds.github.io/2018.1-Dulce_App/'>aqui </a>
+## OBS
+Os serviços estão rodando em background devido a flag ```-d ```, se desejar rodar o docker e verificar o andamento basta retirar essa flag da execução.

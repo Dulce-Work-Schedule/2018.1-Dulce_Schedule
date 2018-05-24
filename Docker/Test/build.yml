@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+  scheduleserver:
+    image: dulce/schedule-server:test
+    build:
+      context: ../../
+      dockerfile: Docker/Test/Server/Dockerfile
+
+  scheduleclient:
+    image: dulce/schedule-client:test
+    build:
+      context: ../../
+      dockerfile: Docker/Test/Client/Dockerfile
