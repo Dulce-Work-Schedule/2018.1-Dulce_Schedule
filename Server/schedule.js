@@ -3,17 +3,17 @@ var currentWeekNumber = require('current-week-number');
 require('seneca')()
  .use("entity")
  .use('mongo-store',{
-    name:'dataBaseSchedules',
-    host:'mongo',
-    port:27017
+    name:process.env.MONGO_DATABASE,
+    host:process.env.MONGO_HOST,
+    port:process.env.MONGO_PORT
   })
  .use('seneca-amqp-transport')
  .use('plg_schedule')
  .listen({
     type:'amqp',
     pin:'role:schedule',
-    port: 5672,
-    username: 'guest',
-    password: 'guest',
-    url: 'amqp://rabbitmq',
+    port: process.env.RABBITMQ_PORT,
+    username: process.env.RABBITMQ_DEFAULT_USER,
+    password: process.env.RABBITMQ_DEFAULT_PASS,
+    url: 'amqp://' + process.env.RABBITMQ_HOST,
 })
