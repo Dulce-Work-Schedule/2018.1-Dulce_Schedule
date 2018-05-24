@@ -1,6 +1,8 @@
 ### Para mais informações visite nossa página [Dulce](https://dulce-work-schedule.github.io/2018.1-Dulce_App/)
 # Schedule
-
+[![Build Status](https://travis-ci.org/Dulce-Work-Schedule/2018.1-Dulce_Schedule.svg?branch=master)](https://travis-ci.org/Dulce-Work-Schedule/2018.1-Dulce_Schedule)
+[![Maintainability](https://api.codeclimate.com/v1/badges/267df35cce0d25b5aaed/maintainability)](https://codeclimate.com/github/Dulce-Work-Schedule/2018.1-Dulce_Schedule/maintainability)
+[![Coverage Status](https://coveralls.io/repos/github/Dulce-Work-Schedule/2018.1-Dulce_Schedule/badge.svg?branch=master)](https://coveralls.io/github/Dulce-Work-Schedule/2018.1-Dulce_Schedule?branch=master)
 
 ### Microsserviços de gerenciamento de usuário
 
