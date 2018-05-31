@@ -17,4 +17,4 @@ before_script:
   - sudo docker-compose -f build.yml build
 
 script:
-  - sudo docker-compose -f start-schedule.yml up
+  - sudo docker-compose -f start-schedule.yml run scheduleserver npm run coverage
