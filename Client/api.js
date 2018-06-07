@@ -1,46 +1,51 @@
 currentWeekNumber = require('current-week-number');
 
+
+function get_schedule_duration(schedule){
+  // The diference between times is given in milliseconds. We are expecting hours,
+  //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
+  return duration = (schedule.end_time - schedule.start_time)/3600000.0
+}
+
 module.exports = function api(options){
 
   this.add('role:api,path:create', function(msg,respond){
 
     var date = new Date(msg.args.body.date)
-    var start_time = msg.args.body.start_time
-    var end_time = msg.args.body.end_time
-    var sector = msg.args.body.sector
-    var employee = msg.args.body.employee
-    var specialty = msg.args.body.specialty
-    var id = msg.args.query.id
+    var start_time = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDay(),
+      msg.args.body.start_time.split(':')[0],
+      msg.args.body.start_time.split(':')[1],
+      "0",
+      "0"
+    )
+    var end_time = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDay(),
+      msg.args.body.start_time.split(':')[0],
+      msg.args.body.start_time.split(':')[1],
+      "0",
+      "0"
+    )
+    var sector_id = msg.args.body.sector_id
+    var profile_id = msg.args.body.profile_id
 
-    var month = date.getMonth() + 1
-    var year = date.getYear() + 1900
-
-    // The diference between times is given in milliseconds. We are expecting hours,
-    //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
-    var amount_of_hours = (Date.parse(end_time) - Date.parse(start_time))/3600000.0
-
-    if(Date.parse(start_time) > Date.parse(end_time)){
+    if(start_time > end_time){
       this.act('role:schedule,cmd:create',{
       }, respond(null, {success:false, message: 'Horários de Inicio e Fim estão em comflito'}))
-    }else if(sector == null || (sector.length < 1)){
+    }else if(sector_id == null || (sector_id.length < 1)){
       this.act('role:schedule,cmd:create',{
       }, respond(null, {success:false, message: 'Setor não pode ser vazio'}))
-    }else if(employee == null || (employee.length < 1)){
-      this.act('role:schedule,cmd:create',{
-      }, respond(null, {success:false, message: 'Plantonista não pode ser vazio'}))
-
     }else{
       this.act('role:schedule,cmd:create',{
         date:date,
         start_time:start_time,
         end_time:end_time,
-        sector:sector,
-        employee:employee,
-        specialty:specialty,
-        amount_of_hours:amount_of_hours,
-        id:id,
-        month:month,
-        year:year
+        sector_id:sector_id,
+        profile_id:profile_id
       }, respond)
     }
   })
@@ -55,11 +60,7 @@ module.exports = function api(options){
     var maximum_hours_week = msg.args.body.maximum_hours_week
     var minimum_hours_month = msg.args.body.minimum_hours_month
     var minimum_hours_week = msg.args.body.minimum_hours_week
-    var employee = msg.args.body.employee
-    var month = msg.args.body.month
-    var year = msg.args.body.year
     var id = msg.args.query.id
-    var amount_of_hours = 0
     var schedule_list = []
 
     this.act('role:schedule,cmd:createScale',{
@@ -67,24 +68,14 @@ module.exports = function api(options){
       maximum_hours_week:maximum_hours_week,
       minimum_hours_month:minimum_hours_month,
       minimum_hours_week:minimum_hours_week,
-      employee:employee,
-      month:month,
-      year:year,
-      amount_of_hours:amount_of_hours,
       id:id
     }, respond)
 });
 
     this.add('role:api,path:listDay', function (msg, respond) {
         var currentDate = new Date();
-        var year = msg.args.query.year;
         var day = msg.args.query.day;
         var month = msg.args.query.month;
-        if (year == undefined) {
-            year = currentDate.getFullYear();
-        } else {
-            currentDate.setFullYear(year);
-        }
         if (month == undefined) {
             month = currentDate.getMonth() + 1;
         } else {
@@ -103,13 +94,7 @@ module.exports = function api(options){
 
     this.add('role:api,path:listMonth', function (msg, respond) {
         var currentDate = new Date();
-        var year = msg.args.query.year;
         var month = msg.args.query.month;
-        if (year == undefined) {
-            year = currentDate.getFullYear();
-        } else {
-            currentDate.setFullYear(year);
-        }
         if (month == undefined) {
             month = currentDate.getMonth() + 1;
             month = JSON.stringify(month);
@@ -126,32 +111,14 @@ module.exports = function api(options){
         this.act('role:schedule, cmd:listSchedule', {}, respond)
 
     });
-    this.add('role:api,path:listYear', function (msg, respond) {
-        var currentDate = new Date();
-        var year = msg.args.query.year;
-        if (year == undefined) {
-            year = currentDate.getFullYear();
-            year = JSON.stringify(year);
-        }
-        var id = msg.args.query.id;
-        this.act('role:schedule,cmd:listYear', {
-            year: year,
-            id: id
-        }, respond)
-    });
+
 
     this.add('role:api,path:listWeek', function (msg, respond) {
         var currentDate = new Date();
-        var year = msg.args.query.year;
         var day = msg.args.query.day;
         var month = msg.args.query.month;
         var week = msg.args.query.week;
         console.log(week);
-        if (year == undefined) {
-            year = currentDate.getFullYear();
-        } else {
-            currentDate.setFullYear(year);
-        }
         if (month == undefined) {
             month = currentDate.getMonth() + 1;
         } else {
@@ -184,16 +151,9 @@ module.exports = function api(options){
 
     this.add('role:api,path:listHourWeek', function (msg, respond) {
         var currentDate = new Date();
-        var year = msg.args.query.year;
         var day = msg.args.query.day;
         var month = msg.args.query.month;
         var week = msg.args.query.week;
-
-        if (year == undefined) {
-            year = currentDate.getFullYear();
-        } else {
-            currentDate.setFullYear(year);
-        }
         if (month == undefined) {
             month = currentDate.getMonth() + 1;
         } else {
@@ -223,42 +183,27 @@ module.exports = function api(options){
 
     this.add('role:api,path:listSectorDay', function (msg, respond) {
         var day = msg.args.query.day;
-        var sector = msg.args.query.sector;
+        var sector_id = msg.args.query.sector_id;
         this.act('role:schedule,cmd:listSectorDay', {
             day: day,
-            sector: sector
+            sector_id: sector_id
         }, respond)
     });
 
     this.add('role:api,path:listSectorMonth', function (msg, respond) {
         var month = msg.args.query.month;
-        var sector =  msg.args.query.sector;
+        var sector_id =  msg.args.query.sector_id;
         this.act('role:schedule,cmd:listSectorMonth', {
             month: month,
-            sector: sector
-        }, respond)
-    });
-
-    this.add('role:api,path:listSectorYear', function (msg, respond) {
-        var year = msg.args.query.year;
-        var sector =  msg.args.query.sector;
-        this.act('role:schedule,cmd:listSectorYear', {
-            year: year,
-            sector: sector
+            sector_id: sector_id
         }, respond)
     });
 
     this.add('role:api,path:listSectorWeek', function (msg, respond) {
         var currentDate = new Date();
-        var year = msg.args.query.year;
         var day = msg.args.query.day;
         var month = msg.args.query.month;
         var week = msg.args.query.week;
-        if(year == undefined){
-            year = currentDate.getFullYear();
-        }else {
-            currentDate.setFullYear(year);
-        }
         if(day == undefined){
             day = currentDate.getDate() - 1;
         }else {
@@ -277,12 +222,12 @@ module.exports = function api(options){
 
         }
 
-        var sector =  msg.args.query.sector;
+        var sector_id =  msg.args.query.sector_id;
 
 
         this.act('role:schedule,cmd:listSectorWeek', {
             week: week,
-            sector: sector
+            sector_id: sector_id
         }, respond)
     });
 
@@ -325,13 +270,6 @@ module.exports = function api(options){
                             fail: '/api/schedule/error'
                         }
                     },
-                    listYear: {
-                        GET: true,
-                        auth: {
-                            strategy: 'jwt',
-                            fail: '/api/schedule/error'
-                        }
-                    },
                     listWeek: {
                         GET: true,
                         auth: {
@@ -359,12 +297,6 @@ module.exports = function api(options){
                        }
                      },
                     listSectorMonth: { GET: true,
-                      auth: {
-                         strategy: 'jwt',
-                         fail: '/api/schedule/error'
-                       }
-                     },
-                    listSectorYear: { GET: true,
                       auth: {
                          strategy: 'jwt',
                          fail: '/api/schedule/error'
