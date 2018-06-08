@@ -1,57 +1,50 @@
 currentWeekNumber = require('current-week-number');
 
 
-function get_schedule_duration(schedule){
+function get_schedule_duration(start_time, end_time){
   // The diference between times is given in milliseconds. We are expecting hours,
   //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
-  return duration = (schedule.end_time - schedule.start_time)/3600000.0
+  return duration = (end_time - start_time)/3600000.0
 }
 
 module.exports = function api(options){
 
-  this.add('role:api,path:create', function(msg,respond){
+  this.add('role:api,path:createSchedule', function(msg,respond){
     var sector_id = msg.args.body.sector_id
     var profile_id = msg.args.body.profile_id
     var start_time = new Date(msg.args.body.start_time)
     var end_time = new Date(msg.args.body.end_time)
 
-    if(start_time > end_time){
-      this.act('role:schedule,cmd:create',{
-      }, respond(null, {success:false, message: 'Horários de Inicio e Fim estão em comflito'}))
-    }else if(sector_id == null || (sector_id.length < 1)){
-      this.act('role:schedule,cmd:create',{
-      }, respond(null, {success:false, message: 'Setor não pode ser vazio'}))
-    }else{
-      this.act('role:schedule,cmd:create',{
-        start_time:start_time,
-        end_time:end_time,
-        sector_id:sector_id,
-        profile_id:profile_id
-      }, respond)
-    }
-  })
-
-  // this.add('role:api,path:listSchedule', function(msg, respond){
-  //   this.act('role:schedule, cmd:listSchedule',{}, respond)
-  //
-  // });
-
-  this.add('role:api,path:createScale', function(msg, respond){
-    var maximum_hours_month = msg.args.body.maximum_hours_month
-    var maximum_hours_week = msg.args.body.maximum_hours_week
-    var minimum_hours_month = msg.args.body.minimum_hours_month
-    var minimum_hours_week = msg.args.body.minimum_hours_week
-    var id = msg.args.query.id
-    var schedule_list = []
-
-    this.act('role:schedule,cmd:createScale',{
-      maximum_hours_month:maximum_hours_month,
-      maximum_hours_week:maximum_hours_week,
-      minimum_hours_month:minimum_hours_month,
-      minimum_hours_week:minimum_hours_week,
-      id:id
+    this.act('role:schedule,cmd:createSchedule',{
+      start_time:start_time,
+      end_time:end_time,
+      sector_id:sector_id,
+      profile_id:profile_id
     }, respond)
-});
+  });
+
+
+  this.add('role:api,path:createScheduleSettings', function(msg, respond){
+    var max_hours_month = msg.args.body.max_hours_month
+    var max_hours_week = msg.args.body.max_hours_week
+    var min_hours_month = msg.args.body.min_hours_month
+    var min_hours_week = msg.args.body.min_hours_week
+    // Lista de ids de templates
+    var templates = msg.args.body.templates
+
+    this.act('role:schedule,cmd:createScheduleSettings',{
+      max_hours_month:max_hours_month,
+      max_hours_week:max_hours_week,
+      min_hours_month:min_hours_month,
+      min_hours_week:min_hours_week,
+      templates:templates
+    }, respond)
+  });
+
+    // this.add('role:api,path:listSchedule', function(msg, respond){
+    //   this.act('role:schedule, cmd:listSchedule',{}, respond)
+    //
+    // });
 
     // this.add('role:api,path:listDay', function (msg, respond) {
     //     var currentDate = new Date();
@@ -287,11 +280,13 @@ module.exports = function api(options){
                     //        fail: '/api/schedule/error'
                     //     }
                     // },
-                    createScale: { POST:true,
-                                auth: {
-                                  strategy: 'jwt',
-                                  fail: '/api/schedule/error',
-                                }},
+                    createScheduleSettings: {
+                      POST:true
+                                // auth: {
+                                //   strategy: 'jwt',
+                                //   fail: '/api/schedule/error',
+                                // }
+                              },
                     error: {GET: true }
                 }
             }
