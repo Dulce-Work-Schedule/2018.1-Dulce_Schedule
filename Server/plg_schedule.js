@@ -1,14 +1,19 @@
 module.exports = function(options){
   this.add('role:schedule,cmd:create', function create (msg,respond) {
     var schedule = this.make('schedules')
-    schedule.date = msg.date
     schedule.start_time = msg.start_time
     schedule.end_time = msg.end_time
     schedule.sector_id = msg.sector_id
     schedule.profile_id = msg.profile_id
 
     //Valida se não tem conflito de horário
-    schedule.list$({date:schedule.date, profile_id:schedule.profile_id}, function(err,list){
+    schedule.list$(
+      {start_time: {
+        $gte: schedule.start_time,
+        $lt: schedule.end_time}
+      }
+      , function(err,list){
+        console.log(list);
       list.forEach(function(time){
         console.log("entra no for each do horario")
           if (schedule.start_time >= time.start_time && schedule.start_time <= time.end_time) {

@@ -10,15 +10,10 @@ function get_schedule_duration(schedule){
 module.exports = function api(options){
 
   this.add('role:api,path:create', function(msg,respond){
-    var date = new Date(msg.args.body.date)
-    var start_time = new Date(date.getTime())
-    start_time.setHours(msg.args.body.start_time.split(':')[0])
-    start_time.setMinutes(msg.args.body.start_time.split(':')[1])
-    var end_time = new Date(date.getTime())
-    end_time.setHours(msg.args.body.end_time.split(':')[0])
-    end_time.setMinutes(msg.args.body.end_time.split(':')[1])
     var sector_id = msg.args.body.sector_id
     var profile_id = msg.args.body.profile_id
+    var start_time = new Date(msg.args.body.start_time)
+    var end_time = new Date(msg.args.body.end_time)
 
     if(start_time > end_time){
       this.act('role:schedule,cmd:create',{
@@ -28,7 +23,6 @@ module.exports = function api(options){
       }, respond(null, {success:false, message: 'Setor não pode ser vazio'}))
     }else{
       this.act('role:schedule,cmd:create',{
-        date:date,
         start_time:start_time,
         end_time:end_time,
         sector_id:sector_id,
