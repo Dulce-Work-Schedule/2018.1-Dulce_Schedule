@@ -1,10 +1,22 @@
 module.exports = function(options){
-  this.add('role:schedule,cmd:createSchedule', function create (msg,respond) {
+    this.add('role:schedule,cmd:createSchedule', function create (msg,respond) {
     var schedule = this.make('schedules')
     schedule.start_time = msg.start_time
     schedule.end_time = msg.end_time
     schedule.sector_id = msg.sector_id
     schedule.profile_id = msg.profile_id
+
+
+    //valida campos
+    if (schedule.start_time == null || schedule.start_time == "") {
+      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
+    } else if (schedule.end_time == null || schedule.end_time == "") {
+      respond(null, {success:false, message: 'O horário de término não pode ser vazio'})
+    } else if (schedule.sector_id == null || schedule.sector_id == "") {
+      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
+    } else if (schedule.profile_id == null || schedule.profile_id == "") {
+      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
+    }
 
     // Valida inicio menor que fim
     if( (schedule.start_time - schedule.start_time) < 0 ){
@@ -40,26 +52,27 @@ module.exports = function(options){
         })
       })
 
-      worked_hours=0
-      schedule.list$(
-        {
-          profile_id: schedule.profile_id,
-          sector_id: schedule.sector_id
-        },
-        function(err,list){
-          list.forEach(function(time){
-            // conta horas
-            worked_hours += get_schedule_duration(time.start_time, time.end_time)
-          })
-        })
+      // var worked_hours=0;
+      //
+      // schedule.list$(
+      //   {
+      //     profile_id: schedule.profile_id,
+      //     sector_id: schedule.sector_id
+      //   },
+      //   function(err,list){
+      //     list.forEach(function(time){
+      //       // conta horas
+      //       worked_hours += get_schedule_duration(time.start_time, time.end_time)
+      //     })
+      //   })
 
       // validar min/max horas mes
-      if (worked_hours > scheduleSettings.max_hours_month) {
-        respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima mensal'})
+      // if (worked_hours > scheduleSettings.max_hours_month) {
+      //   respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima mensal'})
       // validar min/max horas semana
-      }else if (worked_hours > scheduleSettings.max_hours_week) {
-        respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima semanal'})
-      }
+      // }else if (worked_hours > scheduleSettings.max_hours_week) {
+      //   respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima semanal'})
+      // }
 
 
     schedule.save$(function(err,schedule){
@@ -80,12 +93,11 @@ module.exports = function(options){
     console.log(msg);
 
     // validar se ids de templates são validos
-    
+
     // 24*7 = 168
     var max_hours_in_a_week = 168;
     // 24*31 = 744
     var max_hours_in_a_month = 744;
-
 
     //Validações para vazio e menor que 0
     if (scheduleSettings.min_hours_week == null || scheduleSettings.min_hours_week == "") {
