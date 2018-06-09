@@ -175,18 +175,35 @@ module.exports = function(options){
     //   });
     // })
 
+    this.add('role:schedule,cmd:listYear', function (msg, respond) {
+      console.log(msg);
+      var profile_id = msg.profile_id;
+      var start_year= JSON.stringify(new Date(msg.year, 0, 1));
+      console.log(start_year);
+      // console.log(JSON.stringify(start_year));
+      var end_year= JSON.stringify(new Date(msg.year, 11, 31));
+      console.log(end_year);
+      // console.log(JSON.stringify(end_year));
+      // {
+      //   "start_time": {
+      //     $gte: "2018-01-01T00:00:00.000Z",
+      //     $lt: "2018-12-31T00:00:00.000Z"
+      //   }
+      // }
+      var schedule = this.make(schedule_db);
+      schedule.list$(
+        {
+          "start_time": {
+            $gte: start_year,
+            $lt: end_year
+          },
+          "profile_id": profile_id
+        }, function (error, schedule) {
+        console.log(schedule);
+        respond(null, schedule);
+      });
+    })
 
-    // this.add('role:schedule,cmd:listYear', function (msg, respond) {
-    //   var id = msg.id;
-    //   var year = msg.year;
-    //   console.log(id);
-    //   var schedule = this.make(schedule_db);
-    //   schedule.list$({ id, year }, function (error, schedule) {
-    //     respond(null, schedule);
-    //
-    //   });
-    // })
-    //
     // this.add('role:schedule,cmd:listWeek', function (msg, respond) {
     //   var id = msg.id;
     //   var week = msg.week;
