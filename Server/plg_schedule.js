@@ -13,7 +13,6 @@ module.exports = function(options){
       respond(null, {success:false, message: 'O horário de início e de fim não podem ser iguais.'})
     }
 
-    worked_hours=0
     // Valida se não tem conflito de horário
     schedule.list$(
       {
@@ -30,9 +29,6 @@ module.exports = function(options){
       },
       function(err,list){
         list.forEach(function(time){
-          // conta horas
-          worked_hours += get_schedule_duration(time.start_time, time.end_time)
-
           console.log("entra no for each do horario")
             if (schedule.start_time >= time.start_time && schedule.start_time <= time.end_time) {
               respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
@@ -44,6 +40,7 @@ module.exports = function(options){
         })
       })
 
+      worked_hours=0
       schedule.list$(
         {
           profile_id: schedule.profile_id,
@@ -58,14 +55,12 @@ module.exports = function(options){
 
       // validar min/max horas mes
       if (worked_hours > scheduleSettings.max_hours_month) {
-        respond(null, {success:false, message: 'Este funcionário possui uma escala em conflito com o horário selecionado'})
-      // }else if () {
-        // respond(null, {success:false, message: 'Este funcionário possui uma escala em conflito com o horário selecionado'})
-      // }else if(){
-        // respond(null, {success:false, message: 'Este funcionário possui uma escala em conflito com o horário selecionado'})
+        respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima mensal'})
+      // validar min/max horas semana
+      }else if (worked_hours > scheduleSettings.max_hours_week) {
+        respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima semanal'})
       }
 
-      // validar min/max horas semana
 
     schedule.save$(function(err,schedule){
       respond(null, schedule)
@@ -85,14 +80,50 @@ module.exports = function(options){
     console.log(msg);
 
     // validar se ids de templates são validos
+    
+    // 24*7 = 168
+    var max_hours_in_a_week = 168;
+    // 24*31 = 744
+    var max_hours_in_a_month = 744;
 
-    //Validations
-    // if (scheduleSettings.min_hours_week == null || (scheduleSettings.min_hours_week < 1)) {
-    //   respond(null, {success:false, message: 'O minimo de horas por semana não deve ser vazio'})
-    // } else if(scheduleSettings.min_hours_month == null || (scheduleSettings.min_hours_month < 1) ){
-    //   respond(null, {success:false, message: 'O minimo de horas por mês não deve ser vazio'})
-    // }
 
+    //Validações para vazio e menor que 0
+    if (scheduleSettings.min_hours_week == null || scheduleSettings.min_hours_week == "") {
+      respond(null, {success:false, message: 'O minimo de horas por semana não deve ser vazio'})
+    } else if(scheduleSettings.min_hours_week < 0){
+      respond(null, {success:false, message: 'O minimo de horas por semana não pode ser menor que zero'})
+    } else if(scheduleSettings.min_hours_week >= max_hours_in_a_week){
+      respond(null, {success:false, message: 'O minimo de horas por semana não pode ser maior ou igual a 168'})
+    } else if (scheduleSettings.min_hours_month == null || scheduleSettings.min_hours_month == "") {
+      respond(null, {success:false, message: 'O minimo de horas por mês não deve ser vazio'})
+    } else if(scheduleSettings.min_hours_month < 0){
+      respond(null, {success:false, message: 'O minimo de horas por mês não pode ser menor que zero'})
+    } else if(scheduleSettings.min_hours_month >= max_hours_in_a_month){
+      respond(null, {success:false, message: 'O minimo de horas por mês não pode ser maior ou igual a 744'})
+    } else if (scheduleSettings.max_hours_week == null || scheduleSettings.max_hours_week == "") {
+      respond(null, {success:false, message: 'O máximo de horas por semana não deve ser vazio'})
+    } else if(scheduleSettings.max_hours_week < 0){
+      respond(null, {success:false, message: 'O máximo de horas por semana não pode ser menor que zero'})
+    } else if(scheduleSettings.max_hours_week >= max_hours_in_a_week){
+      respond(null, {success:false, message: 'O máximo de horas por semana não pode ser maior ou igual a 168'})
+    } else if (scheduleSettings.max_hours_month == null || scheduleSettings.max_hours_month == "") {
+      respond(null, {success:false, message: 'O máximo de horas por mês não deve ser vazio'})
+    } else if(scheduleSettings.max_hours_month < 0){
+      respond(null, {success:false, message: 'O máximo de horas por mês não pode ser menor que zero'})
+    } else if(scheduleSettings.max_hours_month >= max_hours_in_a_month){
+      respond(null, {success:false, message: 'O máximo de horas por mês não pode ser maior ou igual a 744'})
+    }
+
+    //Validações para max mes não poder ser menor que max Week
+    if (scheduleSettings.min_hours_month <= scheduleSettings.min_hours_week) {
+      respond(null, {success:false, message: 'O minimo de horas por mês não pode ser menor ou igual o minimo de horas por semana'})
+    } else if (scheduleSettings.max_hours_month <= scheduleSettings.max_hours_week) {
+      respond(null, {success:false, message: 'O maximo de horas por mês não pode ser menor ou igual o máximo de horas por semana'})
+    } else if (scheduleSettings.max_hours_month <= scheduleSettings.min_hours_month) {
+      respond(null, {success:false, message: 'O minimo de horas por mês não pode ser menor ou igual o minimo de horas por semana'})
+    } else if (scheduleSettings.max_hours_week <= scheduleSettings.min_hours_week) {
+      respond(null, {success:false, message: 'O maximo de horas por mês não pode ser menor ou igual o máximo de horas por semana'})
+    }
 
     scheduleSettings.save$(function(err,scale){
       respond(null,scale)
