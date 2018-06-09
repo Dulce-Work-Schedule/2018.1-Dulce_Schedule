@@ -111,3 +111,59 @@ invalid_schedule_settings = [
   	"templates":[1,2,3]
   }
 ]
+
+invalid_schedule = [
+  {
+    "start_time": "2018-09-09T22:01",
+    "end_time": "",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "",
+    "end_time": "2018-10-09T22:03",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:01",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "end_time": "2018-10-09T22:03",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:03",
+    "end_time": "2018-10-09T22:05",
+    "sector_id": "",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:03",
+    "end_time": "2018-10-09T22:05",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:05",
+    "end_time": "2018-10-09T22:07",
+    "sector_id": "12",
+    "profile_id": ""
+  },
+  {
+    "start_time": "2018-09-09T22:05",
+    "end_time": "2018-10-09T22:07",
+    "sector_id": "12"
+  }
+]
+
+valid_schedule = [
+  {
+    "start_time": "2018-09-09T20:00",
+    "end_time": "2018-10-09T22:00",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+]
