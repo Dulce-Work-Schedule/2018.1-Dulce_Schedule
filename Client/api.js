@@ -80,6 +80,20 @@ module.exports = function api(options){
     //         id: id
     //     }, respond)
     // });
+    this.add('role:api,path:listYear', function (msg, respond) {
+        console.log(msg.args)
+        var currentDate = new Date();
+        var year = msg.args.query.year;
+        if (year == undefined) {
+            year = currentDate.getFullYear();
+            year = JSON.stringify(year);
+        }
+        var profile_id = msg.args.query.profile_id;
+        this.act('role:schedule,cmd:listYear', {
+            year:year,
+            profile_id:profile_id
+        }, respond)
+    });
 
     this.add('role:api,path:listSchedule', function (msg, respond) {
         this.act('role:schedule, cmd:listSchedule', {}, respond)
@@ -227,6 +241,9 @@ module.exports = function api(options){
                     //     }
                     // },
                     listSchedule: {
+                      GET: true
+                    },
+                    listYear: {
                       GET: true
                     },
                     // listMonth: {
