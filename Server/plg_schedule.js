@@ -1,11 +1,11 @@
 module.exports = function(options){
+    var schedule_db = 'schedules'
     this.add('role:schedule,cmd:createSchedule', function create (msg,respond) {
-    var schedule = this.make('schedules')
+    var schedule = this.make(schedule_db)
     schedule.start_time = msg.start_time
     schedule.end_time = msg.end_time
     schedule.sector_id = msg.sector_id
     schedule.profile_id = msg.profile_id
-
 
     //valida campos
     if (schedule.start_time == null || schedule.start_time == "") {
@@ -18,12 +18,16 @@ module.exports = function(options){
       respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
     }
 
+    // validar apenas mongo object IDs no caso do profile e do sector
+
     // Valida inicio menor que fim
     if( (schedule.start_time - schedule.start_time) < 0 ){
       respond(null, {success:false, message: 'O fim do horário deve ser maior que o início do horário.'})
     }else if( (schedule.start_time - schedule.start_time) == 0 ){
       respond(null, {success:false, message: 'O horário de início e de fim não podem ser iguais.'})
     }
+
+    //valida se profile e sector não são arrays
 
     // Valida se não tem conflito de horário
     schedule.list$(
@@ -145,19 +149,18 @@ module.exports = function(options){
 
 // #############################################################################
 
-  // this.add('role:schedule, cmd:listSchedule', function (msg, respond) {
-  //
-  //     var schedule = this.make('schedule');
-  //     var id = msg.id;
-  //     schedule.list$({ all$: true }, function (error, schedule) {
-  //         respond(null, schedule);
-  //     });
-  // })
+  this.add('role:schedule, cmd:listSchedule', function (msg, respond) {
+      var schedule = this.make(schedule_db);
+      var id = msg.id;
+      schedule.list$({ all$: true }, function (error, schedule) {
+          respond(null, schedule);
+      });
+  })
 
     // this.add('role:schedule,cmd:listDay', function (msg, respond) {
     //     var id = msg.id;
     //     var day = msg.day;
-    //     var schedule = this.make('schedule');
+    //     var schedule = this.make(schedule_db);
     //     schedule.list$({ day, id }, function (error, schedule) {
     //         respond(null, schedule);
     //     });
@@ -166,7 +169,7 @@ module.exports = function(options){
     // this.add('role:schedule,cmd:listMonth', function (msg, respond) {
     //     var id = msg.id;
     //     var month = msg.month;
-    //     var schedule = this.make('schedule');
+    //     var schedule = this.make(schedule_db);
     //     schedule.list$({ month, id }, function (error, schedule) {
     //       respond(null, schedule);
     //   });
@@ -177,7 +180,7 @@ module.exports = function(options){
     //   var id = msg.id;
     //   var year = msg.year;
     //   console.log(id);
-    //   var schedule = this.make('schedule');
+    //   var schedule = this.make(schedule_db);
     //   schedule.list$({ id, year }, function (error, schedule) {
     //     respond(null, schedule);
     //
@@ -187,7 +190,7 @@ module.exports = function(options){
     // this.add('role:schedule,cmd:listWeek', function (msg, respond) {
     //   var id = msg.id;
     //   var week = msg.week;
-    //   var schedule = this.make('schedule');
+    //   var schedule = this.make(schedule_db);
     //   schedule.list$({ id, week }, function (error, schedule) {
     //     respond(null, schedule);
     //
@@ -198,7 +201,7 @@ module.exports = function(options){
     //     var id = msg.id;
     //     var week = msg.week;
     //     var hoursForWeek = 0;
-    //     var schedule = this.make('schedule');
+    //     var schedule = this.make(schedule_db);
     //     schedule.list$({ id, week }, function (error, list) {
     //         hoursForWeek = JSON.stringify(hoursForWeek);
     //         respond(null, { hoursForWeek });
@@ -208,7 +211,7 @@ module.exports = function(options){
     // this.add('role:schedule,cmd:listSectorDay', function (msg, respond) {
     //   var sector_id = msg.sector_id;
     //   var day = msg.day;
-    //   var schedule = this.make('schedule');
+    //   var schedule = this.make(schedule_db);
     //   schedule.list$({ day , sector_id }, function (error, schedule) {
     //     respond(null, schedule);
     //   });
@@ -217,7 +220,7 @@ module.exports = function(options){
     // this.add('role:schedule,cmd:listSectorMonth', function (msg, respond) {
     //     var sector_id = msg.sector_id;
     //      var month = msg.month;
-    //       var schedule = this.make('schedule');
+    //       var schedule = this.make(schedule_db);
     //       schedule.list$({ month , sector_id }, function (error, schedule) {
     //           respond(null, schedule);
     //       });
@@ -226,7 +229,7 @@ module.exports = function(options){
     //   this.add('role:schedule,cmd:listSectorYear',function(msg,respond){
     //     var sector_id = msg.sector_id;
     //     var year = msg.year;
-    //     var schedule = this.make('schedule');
+    //     var schedule = this.make(schedule_db);
     //     schedule.list$({year , sector_id},function(error,schedule){
     //         respond(null,schedule);
     //     });
@@ -235,7 +238,7 @@ module.exports = function(options){
     // this.add('role:schedule,cmd:listSectorWeek',function(msg,respond){
     //     var sector_id = msg.sector_id;
     //     var week = msg.week;
-    //     var schedule = this.make('schedule');
+    //     var schedule = this.make(schedule_db);
     //     schedule.list$({sector_id , week}, function(error,schedule){
     //         respond(null,schedule);
     //     });

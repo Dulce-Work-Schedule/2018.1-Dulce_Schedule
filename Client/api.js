@@ -81,10 +81,9 @@ module.exports = function api(options){
     //     }, respond)
     // });
 
-    // this.add('role:api,path:listSchedule', function (msg, respond) {
-    //     this.act('role:schedule, cmd:listSchedule', {}, respond)
-    //
-    // });
+    this.add('role:api,path:listSchedule', function (msg, respond) {
+        this.act('role:schedule, cmd:listSchedule', {}, respond)
+    });
 
 
     // this.add('role:api,path:listWeek', function (msg, respond) {
@@ -219,7 +218,6 @@ module.exports = function api(options){
                 map: {
                     createSchedule: {
                       POST: true
-
                     },
                     // listDay: {
                     //     GET: true,
@@ -228,13 +226,9 @@ module.exports = function api(options){
                     //         fail: '/api/schedule/error'
                     //     }
                     // },
-                    // listSchedule: {
-                    //     GET: true,
-                    //     auth: {
-                    //         strategy: 'jwt',
-                    //         fail: '/api/schedule/error'
-                    //     }
-                    // },
+                    listSchedule: {
+                      GET: true
+                    },
                     // listMonth: {
                     //     GET: true,
                     //     auth: {
@@ -282,11 +276,7 @@ module.exports = function api(options){
                     // },
                     createScheduleSettings: {
                       POST:true
-                                // auth: {
-                                //   strategy: 'jwt',
-                                //   fail: '/api/schedule/error',
-                                // }
-                              },
+                    },
                     error: {GET: true }
                 }
             }
