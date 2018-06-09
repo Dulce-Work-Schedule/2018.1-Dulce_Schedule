@@ -217,7 +217,7 @@ module.exports = function api(options){
                 prefix: '/api/schedule',
                 pin: 'role:api,path:*',
                 map: {
-                    create: {
+                    createSchedule: {
                       POST: true
 
                     },
