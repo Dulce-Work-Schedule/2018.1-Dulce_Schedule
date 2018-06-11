@@ -6,32 +6,91 @@ function get_schedule_duration(start_time, end_time){
   //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
   return duration = (end_time - start_time)/3600000.0
 }
-
 module.exports = function api(options){
 
   this.add('role:api,path:createSchedule', function(msg,respond){
+    if (msg.args.body == {}){
+      message.body.error = 'Nenhum parametro informado';
+    }
     var sector_id = msg.args.body.sector_id
     var profile_id = msg.args.body.profile_id
     var start_time = new Date(msg.args.body.start_time)
     var end_time = new Date(msg.args.body.end_time)
+    var result = {};
 
-    // Valida campos
-    if (start_time == null || start_time == "") {
-      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
-    } else if (end_time == null || end_time == "") {
-      respond(null, {success:false, message: 'O horário de término não pode ser vazio'})
-    } else if (sector_id == null || sector_id == "") {
-      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
-    } else if (profile_id == null || profile_id == "") {
-      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
+    //valida campos
+    console.log("1");
+    console.log(start_time);
+    if (start_time == "") {
+      result.start_time_error = 'O horário de inicio não pode ser vazio';
+      console.log(result.start_time_error);
     }
-
-    this.act('role:schedule,cmd:createSchedule',{
-      start_time:start_time,
-      end_time:end_time,
-      sector_id:sector_id,
-      profile_id:profile_id
-    }, respond)
+    console.log("2");
+    console.log(end_time);
+    if (end_time == "") {
+      result.end_time_error = 'O horário de término não pode ser vazio';
+      console.log(result.end_time_error);
+    }
+    console.log("3");
+    console.log(start_time);
+    if (start_time == null) {
+      result.start_time_error = 'Horário inicial inválido';
+      console.log(result.start_time_error);
+    }
+    if (start_time == "Invalid Date") {
+      result.start_time_error = 'Horário inicial inválido';
+      console.log(result.start_time_error);
+    }
+    console.log("4");
+    console.log(end_time);
+    if (end_time == null) {
+      result.end_time_error = 'Horário final inválido';
+      console.log(result.end_time_error);
+    }
+    if (end_time == "Invalid Date") {
+      result.end_time_error = 'Horário final inválido';
+      console.log(result.end_time_error);
+    }
+    console.log("5");
+    console.log(sector_id);
+    if (sector_id == null || sector_id == "") {
+      result.sector_id_error = 'O setor é obrigatório.';
+      console.log(result.sector_id_error);
+    }
+    console.log("6");
+    console.log(profile_id);
+    if (profile_id == null || profile_id == "") {
+      result.profile_id_error = 'O usuário é obrigatório.';
+      console.log(result.profile_id_error);
+    }
+    console.log("7");
+    console.log(profile_id);
+    if (Array.isArray(profile_id)) {
+      result.profile_id_array_error = 'Só é permitido um perfil de usuário.';
+      console.log(result.profile_id_array_error);
+    }
+    console.log("8");
+    console.log(sector_id);
+    if (Array.isArray(sector_id)) {
+      result.multiple_sector_id_error = 'Só é permitido um setor';
+      console.log(result.multiple_sector_id_error);
+    }
+    console.log("9");
+    if (Object.entries(result)[0]) {
+      console.log("*********************** Resultado com erro: ***********************");
+      console.log(result);
+      console.log("*********************** Fim do Resultado com erro: ***********************");
+      result.success = false;
+      respond(null, result)
+    } else {
+      console.log("10");
+      this.act('role:schedule,cmd:createSchedule',{
+        start_time:start_time,
+        end_time:end_time,
+        sector_id:sector_id,
+        profile_id:profile_id
+      }, respond)
+    }
   });
 
 
@@ -97,17 +156,28 @@ module.exports = function api(options){
         var year = msg.args.query.year;
         if (year == undefined) {
             year = currentDate.getFullYear();
-            year = JSON.stringify(year);
+            year = parseInt(year);
         }
+        start_year= new Date(year, 0, 1);
+        end_year= new Date((year+1), 0, 1);
+
+        console.log("Start" + start_year)
+        console.log("End" + end_year)
+
         var profile_id = msg.args.query.profile_id;
         this.act('role:schedule,cmd:listYear', {
-            year:year,
+            start_year:start_year,
+            end_year:end_year,
             profile_id:profile_id
         }, respond)
     });
 
-    this.add('role:api,path:listSchedule', function (msg, respond) {
-        this.act('role:schedule, cmd:listSchedule', {}, respond)
+    this.add('role:api,path:listByProfile', function (msg, respond) {
+      var id = msg.args.query.id
+      console.log("id informado:" + id);
+      this.act('role:schedule, cmd:listByProfile', {
+        id:id
+      }, respond)
     });
 
 
@@ -251,7 +321,7 @@ module.exports = function api(options){
                     //         fail: '/api/schedule/error'
                     //     }
                     // },
-                    listSchedule: {
+                    listByProfile: {
                       GET: true
                     },
                     listYear: {
