@@ -7,18 +7,9 @@ module.exports = function(options){
     schedule.sector_id = msg.sector_id
     schedule.profile_id = msg.profile_id
 
-    //valida campos
-    if (schedule.start_time == null || schedule.start_time == "") {
-      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
-    } else if (schedule.end_time == null || schedule.end_time == "") {
-      respond(null, {success:false, message: 'O horário de término não pode ser vazio'})
-    } else if (schedule.sector_id == null || schedule.sector_id == "") {
-      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
-    } else if (schedule.profile_id == null || schedule.profile_id == "") {
-      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
-    }
-
     // validar apenas mongo object IDs no caso do profile e do sector
+
+    //valida se profile e sector não são arrays
 
     // Valida inicio menor que fim
     if( (schedule.start_time - schedule.start_time) < 0 ){
@@ -27,7 +18,6 @@ module.exports = function(options){
       respond(null, {success:false, message: 'O horário de início e de fim não podem ser iguais.'})
     }
 
-    //valida se profile e sector não são arrays
 
     // Valida se não tem conflito de horário
     schedule.list$(

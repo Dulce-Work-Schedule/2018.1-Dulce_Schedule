@@ -15,6 +15,17 @@ module.exports = function api(options){
     var start_time = new Date(msg.args.body.start_time)
     var end_time = new Date(msg.args.body.end_time)
 
+    // Valida campos
+    if (start_time == null || start_time == "") {
+      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
+    } else if (end_time == null || end_time == "") {
+      respond(null, {success:false, message: 'O horário de término não pode ser vazio'})
+    } else if (sector_id == null || sector_id == "") {
+      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
+    } else if (profile_id == null || profile_id == "") {
+      respond(null, {success:false, message: 'O horário de inicio não pode ser vazio'})
+    }
+
     this.act('role:schedule,cmd:createSchedule',{
       start_time:start_time,
       end_time:end_time,
