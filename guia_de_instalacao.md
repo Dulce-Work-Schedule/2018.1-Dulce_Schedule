@@ -43,6 +43,17 @@ Pronto o seu ambiente de trabalho já está funcionando, acessar o ambiente de t
 ```bash
 $ sudo docker exec -it **NomeDoServiço** bash
 ```
+#### Acessar o mongo:
+
+Para encontrar o container id do mongo você deve
+```bash
+sudo docker contailer ls
+```
+
+Para acessar o mongo:
+```bash
+$ sudo docker exec -it {CONTAILER ID} mongo mongo
+```
 
 #### Para fechar e encerrar os dockers utilize o seguinte comando:
 OBS: esse comando para todos os dockers que estão rodando em sua máquina.
