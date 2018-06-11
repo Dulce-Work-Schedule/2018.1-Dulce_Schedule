@@ -1,50 +1,52 @@
+var schedule_db = 'schedules'
 module.exports = function(options){
-    var schedule_db = 'schedules'
     this.add('role:schedule,cmd:createSchedule', function create (msg,respond) {
-    var schedule = this.make(schedule_db)
-    schedule.start_time = msg.start_time
-    schedule.end_time = msg.end_time
-    schedule.sector_id = msg.sector_id
-    schedule.profile_id = msg.profile_id
+      var schedule = this.make(schedule_db)
+      schedule.start_time = msg.start_time
+      schedule.end_time = msg.end_time
+      schedule.sector_id = msg.sector_id
+      schedule.profile_id = msg.profile_id
 
-    // validar apenas mongo object IDs no caso do profile e do sector
+      // validar apenas mongo object IDs no caso do profile e do sector
 
-    //valida se profile e sector não são arrays
+      // Valida inicio menor que fim
+      if( (schedule.start_time - schedule.start_time) < 0 ){
+        respond(null, {success:false, message: 'O fim do horário deve ser maior que o início do horário.'})
+      }else if( (schedule.start_time - schedule.start_time) == 0 ){
+        respond(null, {success:false, message: 'O horário de início e de fim não podem ser iguais.'})
+      }
 
-    // Valida inicio menor que fim
-    if( (schedule.start_time - schedule.start_time) < 0 ){
-      respond(null, {success:false, message: 'O fim do horário deve ser maior que o início do horário.'})
-    }else if( (schedule.start_time - schedule.start_time) == 0 ){
-      respond(null, {success:false, message: 'O horário de início e de fim não podem ser iguais.'})
-    }
+      //valida se profile e sector não são arrays
 
-
-    // Valida se não tem conflito de horário
-    schedule.list$(
-      {
-        start_time: {
-          $gte: schedule.start_time,
-          $lt: schedule.end_time
+      // Valida se não tem conflito de horário
+      schedule.list$(
+        {
+          start_time: {
+            $gte: schedule.start_time,
+            $lt: schedule.end_time
+          },
+          end_time: {
+            $lte: schedule.end_time,
+            $gt: schedule.start_time
+          },
+          profile_id: schedule.profile_id,
+          sector_id: schedule.sector_id
         },
-        end_time: {
-          $lte: schedule.end_time,
-          $gt: schedule.start_time
-        },
-        profile_id: schedule.profile_id,
-        sector_id: schedule.sector_id
-      },
-      function(err,list){
-        list.forEach(function(time){
-          console.log("entra no for each do horario")
-            if (schedule.start_time >= time.start_time && schedule.start_time <= time.end_time) {
-              respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
-            }else if (schedule.end_time >= time.start_time && schedule.end_time <= time.end_time) {
-              respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
-            }else if(schedule.start_time <= time.start_time && schedule.end_time >= time.end_time){
-              respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
-            }
+        function(err,list){
+
+          list.forEach(function(time){
+            console.log("Verificando conflitos de horarios...")
+            console.log(time)
+              if (schedule.start_time >= time.start_time && schedule.start_time <= time.end_time) {
+                respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
+              }else if (schedule.end_time >= time.start_time && schedule.end_time <= time.end_time) {
+                respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
+              }else if(schedule.start_time <= time.start_time && schedule.end_time >= time.end_time){
+                respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
+              }
+          })
         })
-      })
+
 
       // var worked_hours=0;
       //
@@ -69,8 +71,47 @@ module.exports = function(options){
       // }
 
 
-    schedule.save$(function(err,schedule){
-      respond(null, schedule)
+      schedule.save$(function(err,schedule){
+        respond(null, schedule)
+      })
+  })
+
+// #############################################################################
+
+  this.add('role:schedule, cmd:listByProfile', function (msg, respond) {
+      var schedule = this.make(schedule_db);
+      var id = msg.id;
+      console.log("id informado:" + id);
+      schedule.list$(
+        {
+          profile_id: id,
+        },
+        function (error, schedule) {
+          console.log("Schedules:" + schedule);
+          respond(null, schedule);
+        }
+      );
+  })
+
+// #############################################################################
+
+  this.add('role:schedule,cmd:listYear', function (msg, respond) {
+    console.log(msg);
+    var schedule = this.make(schedule_db);
+    schedule.profile_id = msg.profile_id;
+    start_year = msg.start_year;
+    end_year = msg.end_year;
+
+    schedule.list$(
+      {
+        start_time: {
+          $gte: start_year,
+          $lt: end_year
+        },
+        profile_id: schedule.profile_id,
+      },
+      function(err,list){
+        respond (null, list)
     })
   })
 
@@ -87,7 +128,6 @@ module.exports = function(options){
     console.log(msg);
 
     // validar se ids de templates são validos
-
     // 24*7 = 168
     var max_hours_in_a_week = 168;
     // 24*31 = 744
@@ -137,16 +177,6 @@ module.exports = function(options){
 
   })
 
-// #############################################################################
-
-  this.add('role:schedule, cmd:listSchedule', function (msg, respond) {
-      var schedule = this.make(schedule_db);
-      var id = msg.id;
-      schedule.list$({ all$: true }, function (error, schedule) {
-          respond(null, schedule);
-      });
-  })
-
     // this.add('role:schedule,cmd:listDay', function (msg, respond) {
     //     var id = msg.id;
     //     var day = msg.day;
@@ -164,36 +194,6 @@ module.exports = function(options){
     //       respond(null, schedule);
     //   });
     // })
-
-    this.add('role:schedule,cmd:listYear', function (msg, respond) {
-      console.log(msg);
-      var profile_id = msg.profile_id;
-      var start_year= JSON.stringify(new Date(msg.year, 0, 1));
-      console.log(start_year);
-      // console.log(JSON.stringify(start_year));
-      var end_year= JSON.stringify(new Date(msg.year, 11, 31));
-      console.log(end_year);
-      // console.log(JSON.stringify(end_year));
-      // {
-      //   "start_time": {
-      //     $gte: "2018-01-01T00:00:00.000Z",
-      //     $lt: "2018-12-31T00:00:00.000Z"
-      //   }
-      // }
-      var schedule = this.make(schedule_db);
-      schedule.list$(
-        {
-          "start_time": {
-            $gte: start_year,
-            $lt: end_year
-          },
-          "profile_id": profile_id
-        }, function (error, schedule) {
-        console.log(schedule);
-        respond(null, schedule);
-      });
-    })
-
     // this.add('role:schedule,cmd:listWeek', function (msg, respond) {
     //   var id = msg.id;
     //   var week = msg.week;
