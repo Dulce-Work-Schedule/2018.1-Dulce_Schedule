@@ -4,8 +4,9 @@ module.exports = function(options){
     this.add('role:schedule,cmd:createSchedule', function create (msg,respond) {
       var schedule = this.make(schedule_db)
       var scheduleSettings = this.make()
-      schedule.start_time = msg.start_time
-      schedule.end_time = msg.end_time
+      var worked_hours=0;
+      schedule.start_time = new Date(msg.start_time)
+      schedule.end_time = new Date(msg.end_time)
       schedule.sector_id = msg.sector_id
       schedule.profile_id = msg.profile_id
 
@@ -14,19 +15,22 @@ module.exports = function(options){
       // validate if have any schedule conflict has occurred
       schedule.list$(
         {
-          start_time: {
-            $gte: schedule.start_time,
-            $lt: schedule.end_time
-          },
-          end_time: {
-            $lte: schedule.end_time,
-            $gt: schedule.start_time
-          },
-          profile_id: schedule.profile_id,
-          sector_id: schedule.sector_id
+          and$: [
+            {or$:[
+              {start_time: {
+                $gte: schedule.start_time,
+                $lt: schedule.end_time
+              }},
+              {end_time: {
+                $lte: schedule.end_time,
+                $gt: schedule.start_time
+              }}
+            ]},
+            {profile_id: schedule.profile_id},
+            {sector_id: schedule.sector_id}
+          ]
         },
         function(err,list){
-
           list.forEach(function(time){
             console.log("Verificando conflitos de horarios...")
             console.log(time)
@@ -40,20 +44,29 @@ module.exports = function(options){
           })
         })
 
+      console.log(schedule.start_time);
+      month = parseInt(schedule.start_time.getMonth());
+      year = parseInt(schedule.start_time.getFullYear());
+      start_month = new Date(year, month, 1);
+      end_month = new Date(year, month+1, 1);
 
-      // var worked_hours=0;
-      //
-      // schedule.list$(
-      //   {
-      //     profile_id: schedule.profile_id,
-      //     sector_id: schedule.sector_id
-      //   },
-      //   function(err,list){
-      //     list.forEach(function(time){
-      //       // conta horas
-      //       worked_hours += get_schedule_duration(time.start_time, time.end_time)
-      //     })
-      //   })
+      schedule.list$(
+        {
+          start_time: {
+            $gte: start_month,
+            $lt: end_month
+          },
+          profile_id: schedule.profile_id,
+          sector_id: schedule.sector_id
+        },
+        function(err,list){
+          list.forEach(function(time){
+            console.log('Parcial' + worked_hours);
+            worked_hours += get_schedule_duration(time.start_time, time.end_time)
+          })
+        })
+
+        console.log("Final" + worked_hours);
 
       // validar min/max horas mes
       // if (worked_hours > scheduleSettings.max_hours_month) {
