@@ -20,17 +20,67 @@ describe('Create schedule', function() {
 
     seneca.act({
       role: "schedule",
-      cmd: "create",
-      date: "09/04/2018",
-      start_time: "06:00",
-      end_time: "10:00",
-      sector: "emergência",
-      employee: "Gustavo",
-      specialty: "Oncologista",
-      amount_of_hours : 4,
-      manager: true
+      cmd: "createSchedule",
+      start_time: "2018-09-09T19:00",
+      end_time: "2018-09-09T23:00",
+      sector_id: 13,
+      profile_id: 31,
     }, function(err, result){
-      expect(result.sector).to.equal("emergência")
+      console.log(result);
+      expect(result.sector_id).to.equal(13)
+      expect(result.profile_id).to.equal(31)
+      expect(result.start_time).to.equal('2018-09-09T19:00')
+      expect(result.end_time).to.equal('2018-09-09T23:00')
+      fin()
+    })
+  })
+});
+
+describe('Create schedule settings', function() {
+
+  it('Schedule Settings entity creation', function(fin){
+    var seneca = test_schedule_seneca(fin)
+
+    seneca.act({
+      role: "schedule",
+      cmd: "createScheduleSettings",
+      max_hours_month: 150,
+    	max_hours_week: 45,
+    	min_hours_month: 50,
+    	min_hours_week: 10,
+    	templates: [1,2]
+    }, function(err, result){
+      console.log(result);
+      expect(result.max_hours_month).to.equal(150)
+      expect(result.max_hours_week).to.equal(45)
+      expect(result.min_hours_month).to.equal(50)
+      expect(result.min_hours_week).to.equal(10)
+      expect(result.templates).to.eql([1,2])
+      fin()
+    })
+  })
+});
+
+describe('Create schedule settings valid with string parameters', function() {
+
+  it('Schedule Settings entity creation valid with string parameters', function(fin){
+    var seneca = test_schedule_seneca(fin)
+
+    seneca.act({
+      role: "schedule",
+      cmd: "createScheduleSettings",
+      max_hours_month: "150",
+    	max_hours_week: "45",
+    	min_hours_month: "50",
+    	min_hours_week: "10",
+    	templates: [1,2]
+    }, function(err, result){
+      console.log(result);
+      expect(result.max_hours_month).to.equal(150)
+      expect(result.max_hours_week).to.equal(45)
+      expect(result.min_hours_month).to.equal(50)
+      expect(result.min_hours_week).to.equal(10)
+      expect(result.templates).to.eql([1,2])
       fin()
     })
   })
