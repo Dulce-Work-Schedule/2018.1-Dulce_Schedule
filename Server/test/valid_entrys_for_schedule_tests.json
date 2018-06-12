@@ -1,0 +1,169 @@
+valid_schedule_settings = [
+  {
+  	"max_hours_month": 160,
+  	"max_hours_week": 40,
+  	"min_hours_month": 50,
+  	"min_hours_week": 8,
+  	"templates": [1,2,3]
+  },
+  {
+  	"max_hours_month": 150,
+  	"max_hours_week": 45,
+  	"min_hours_month": 50,
+  	"min_hours_week": 10,
+  	"templates": [1,2,3]
+  },
+  {
+  	"max_hours_month": 145,
+  	"max_hours_week": 50,
+  	"min_hours_month": 60,
+  	"min_hours_week": 11,
+  	"templates": [1,2,3, 4]
+  },
+  {
+  	"max_hours_month":"21",
+  	"max_hours_week":"11",
+  	"min_hours_month":"12",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  }
+]
+
+invalid_schedule_settings = [
+  {
+  	"max_hours_month":"",
+  	"max_hours_week":"11",
+  	"min_hours_month":"12",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_week":"11",
+  	"min_hours_month":"12",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"-1",
+  	"max_hours_week":"11",
+  	"min_hours_month":"12",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"12",
+  	"max_hours_week":"",
+  	"min_hours_month":"12",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"12",
+  	"min_hours_month":"12",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"11",
+  	"max_hours_week":"-1",
+  	"min_hours_month":"12",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"11",
+  	"max_hours_week":"11",
+  	"min_hours_month":"-1",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"11",
+  	"max_hours_week":"11",
+  	"min_hours_month":"",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"11",
+  	"max_hours_week":"11",
+  	"min_hours_week":"12",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"11",
+  	"max_hours_week":"11",
+  	"min_hours_month":"11",
+  	"min_hours_week":"-1",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"11",
+  	"max_hours_week":"11",
+  	"min_hours_month":"11",
+  	"min_hours_week":"",
+  	"templates":[1,2,3]
+  },
+  {
+  	"max_hours_month":"11",
+  	"max_hours_week":"11",
+  	"min_hours_month":"11",
+  	"templates":[1,2,3]
+  }
+]
+
+invalid_schedule = [
+  {
+    "start_time": "2018-09-09T22:01",
+    "end_time": "",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "",
+    "end_time": "2018-10-09T22:03",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:01",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "end_time": "2018-10-09T22:03",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:03",
+    "end_time": "2018-10-09T22:05",
+    "sector_id": "",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:03",
+    "end_time": "2018-10-09T22:05",
+    "profile_id": "12"
+  },
+  {
+    "start_time": "2018-09-09T22:05",
+    "end_time": "2018-10-09T22:07",
+    "sector_id": "12",
+    "profile_id": ""
+  },
+  {
+    "start_time": "2018-09-09T22:05",
+    "end_time": "2018-10-09T22:07",
+    "sector_id": "12"
+  }
+]
+
+valid_schedule = [
+  {
+    "start_time": "2018-09-09T20:00",
+    "end_time": "2018-10-09T22:00",
+    "sector_id": "12",
+    "profile_id": "12"
+  },
+]
