@@ -95,6 +95,7 @@ module.exports = function api(options){
 
     result = {}
     // validar se ids de templates são validos
+
     // 24*7 = 168
     var max_hours_in_a_week = 168;
     // 24*31 = 744

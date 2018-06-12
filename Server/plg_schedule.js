@@ -1,7 +1,9 @@
 var schedule_db = 'schedules'
+var schedule_settings_db = 'scheduleSettings'
 module.exports = function(options){
     this.add('role:schedule,cmd:createSchedule', function create (msg,respond) {
       var schedule = this.make(schedule_db)
+      var scheduleSettings = this.make()
       schedule.start_time = msg.start_time
       schedule.end_time = msg.end_time
       schedule.sector_id = msg.sector_id
@@ -9,16 +11,7 @@ module.exports = function(options){
 
       // validar apenas mongo object IDs no caso do profile e do sector
 
-      // Valida inicio menor que fim
-      if( (schedule.start_time - schedule.start_time) < 0 ){
-        respond(null, {success:false, message: 'O fim do horário deve ser maior que o início do horário.'})
-      }else if( (schedule.start_time - schedule.start_time) == 0 ){
-        respond(null, {success:false, message: 'O horário de início e de fim não podem ser iguais.'})
-      }
-
-      //valida se profile e sector não são arrays
-
-      // Valida se não tem conflito de horário
+      // validate if have any schedule conflict has occurred
       schedule.list$(
         {
           start_time: {
@@ -170,11 +163,11 @@ this.add('role:schedule,cmd:listYearByUser', function (msg, respond) {
 // #############################################################################
 
   this.add('role:schedule, cmd:createScheduleSettings', function error(msg, respond){
-    var scheduleSettings = this.make('scheduleSettings')
-    scheduleSettings.max_hours_month = msg.max_hours_month
-    scheduleSettings.max_hours_week = msg.max_hours_week
-    scheduleSettings.min_hours_month = msg.min_hours_month
-    scheduleSettings.min_hours_week = msg.min_hours_week
+    var scheduleSettings = this.make(schedule_settings_db)
+    scheduleSettings.max_hours_month = parseInt(msg.max_hours_month)
+    scheduleSettings.max_hours_week = parseInt(msg.max_hours_week)
+    scheduleSettings.min_hours_month = parseInt(msg.min_hours_month)
+    scheduleSettings.min_hours_week = parseInt(msg.min_hours_week)
     scheduleSettings.templates = msg.templates
 
     scheduleSettings.save$(function(err, scheduleSettings){

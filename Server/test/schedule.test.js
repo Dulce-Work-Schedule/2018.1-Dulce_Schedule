@@ -23,12 +23,12 @@ describe('Create schedule', function() {
       cmd: "createSchedule",
       start_time: "2018-09-09T19:00",
       end_time: "2018-09-09T23:00",
-      sector_id: 13,
-      profile_id: 31,
+      sector_id: "13",
+      profile_id: "31",
     }, function(err, result){
       console.log(result);
-      expect(result.sector_id).to.equal(13)
-      expect(result.profile_id).to.equal(31)
+      expect(result.sector_id).to.equal('13')
+      expect(result.profile_id).to.equal('31')
       expect(result.start_time).to.equal('2018-09-09T19:00')
       expect(result.end_time).to.equal('2018-09-09T23:00')
       fin()
@@ -58,11 +58,7 @@ describe('Create schedule settings', function() {
       expect(result.templates).to.eql([1,2])
       fin()
     })
-  })
-});
-
-describe('Create schedule settings valid with string parameters', function() {
-
+  }),
   it('Schedule Settings entity creation valid with string parameters', function(fin){
     var seneca = test_schedule_seneca(fin)
 
@@ -70,10 +66,10 @@ describe('Create schedule settings valid with string parameters', function() {
       role: "schedule",
       cmd: "createScheduleSettings",
       max_hours_month: "150",
-    	max_hours_week: "45",
-    	min_hours_month: "50",
-    	min_hours_week: "10",
-    	templates: [1,2]
+      max_hours_week: "45",
+      min_hours_month: "50",
+      min_hours_week: "10",
+      templates: [1,2]
     }, function(err, result){
       console.log(result);
       expect(result.max_hours_month).to.equal(150)
