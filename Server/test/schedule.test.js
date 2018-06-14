@@ -81,3 +81,31 @@ describe('Create schedule settings', function() {
     })
   })
 });
+
+describe('List schedules by profile', function() {
+  it('Lists the correct schedule for the profile', function(fin) {
+    var seneca = test_schedule_seneca(fin)
+
+    seneca.act({
+      role: "schedule",
+      cmd: "createSchedule",
+      start_time: "2018-09-09T19:00",
+      end_time: "2018-09-09T23:00",
+      sector_id: "13",
+      profile_id: "31",
+    }, function(err, result){
+      seneca.act({
+        role: "schedule",
+        cmd: "listByProfile",
+        id: "31",
+      }, function(err, result) {
+        console.log("Result:")
+        expect(result[0].sector_id).to.equal('13')
+        expect(result[0].profile_id).to.equal('31')
+        expect(result[0].start_time).to.equal('2018-09-09T19:00')
+        expect(result[0].end_time).to.equal('2018-09-09T23:00')
+        fin()
+        })
+    })
+  })
+});
