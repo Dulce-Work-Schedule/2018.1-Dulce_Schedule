@@ -4,10 +4,10 @@ var schedule_db = 'schedules'
 var schedule_settings_db = 'scheduleSettings'
 
 module.exports = function(options){
-
     this.add('role:schedule,cmd:createSchedule', async function create (msg,respond) {
       var schedule = this.make(schedule_db)
-      var scheduleSettings = this.make()
+      var scheduleSettings = this.make(schedule_settings_db)
+      result = {"aqui":"aqui"}
       var worked_hours=0;
       schedule.start_time = new Date(msg.start_time)
       schedule.end_time = new Date(msg.end_time)
@@ -16,9 +16,8 @@ module.exports = function(options){
 
       // validar apenas mongo object IDs no caso do profile e do sector
 
-      console.log("antes");
-      // validate if have any schedule conflict has occurred
 
+      // validate if have any schedule conflict has occurred
       var list$ = Promise.promisify(schedule.list$, { context: schedule });
       var valid = true;
       await list$(
@@ -38,16 +37,18 @@ module.exports = function(options){
             {sector_id: schedule.sector_id}
           ]
         })
-        .then(function(list){
+        .then(await function(list){
           if (list.length != 0){
-            valid = false;
+            
+            // result.
           } else
-              valid = true;
+            valid = true;
         })
         .catch(function(ameixa) {
           console.log('error')
         })
 
+        console.log(valid);
       if (!valid)
         return respond(null, {success:false, message: 'Plantonista já possui um horário :('})
 
