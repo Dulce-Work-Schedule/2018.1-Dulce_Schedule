@@ -1,7 +1,11 @@
+var Promise = require('bluebird');
+
 var schedule_db = 'schedules'
 var schedule_settings_db = 'scheduleSettings'
+
 module.exports = function(options){
-    this.add('role:schedule,cmd:createSchedule', function create (msg,respond) {
+
+    this.add('role:schedule,cmd:createSchedule', async function create (msg,respond) {
       var schedule = this.make(schedule_db)
       var scheduleSettings = this.make()
       var worked_hours=0;
@@ -12,8 +16,12 @@ module.exports = function(options){
 
       // validar apenas mongo object IDs no caso do profile e do sector
 
+      console.log("antes");
       // validate if have any schedule conflict has occurred
-      schedule.list$(
+
+      var list$ = Promise.promisify(schedule.list$, { context: schedule });
+      var valid = true;
+      await list$(
         {
           and$: [
             {or$:[
@@ -29,22 +37,21 @@ module.exports = function(options){
             {profile_id: schedule.profile_id},
             {sector_id: schedule.sector_id}
           ]
-        },
-        function(err,list){
-          list.forEach(function(time){
-            console.log("Verificando conflitos de horarios...")
-            console.log(time)
-              if (schedule.start_time >= time.start_time && schedule.start_time <= time.end_time) {
-                respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
-              }else if (schedule.end_time >= time.start_time && schedule.end_time <= time.end_time) {
-                respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
-              }else if(schedule.start_time <= time.start_time && schedule.end_time >= time.end_time){
-                respond(null, {success:false, message: 'Plantonista já possui um horário de '+ time.start_time + ' à ' + time.end_time + '.'})
-              }
-          })
+        })
+        .then(function(list){
+          if (list.length != 0){
+            valid = false;
+          } else
+              valid = true;
+        })
+        .catch(function(ameixa) {
+          console.log('error')
         })
 
-      console.log(schedule.start_time);
+      if (!valid)
+        return respond(null, {success:false, message: 'Plantonista já possui um horário :('})
+
+
       month = parseInt(schedule.start_time.getMonth());
       year = parseInt(schedule.start_time.getFullYear());
       start_month = new Date(year, month, 1);
@@ -61,21 +68,11 @@ module.exports = function(options){
         },
         function(err,list){
           list.forEach(function(time){
-            console.log('Parcial' + worked_hours);
             worked_hours += get_schedule_duration(time.start_time, time.end_time)
           })
         })
 
-        console.log("Final" + worked_hours);
-
-      // validar min/max horas mes
-      // if (worked_hours > scheduleSettings.max_hours_month) {
-      //   respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima mensal'})
-      // validar min/max horas semana
-      // }else if (worked_hours > scheduleSettings.max_hours_week) {
-      //   respond(null, {success:false, message: 'Este funcionário já recebeu a carga maxima semanal'})
-      // }
-
+        console.log('depois')
 
       schedule.save$(function(err,schedule){
         respond(null, schedule)
