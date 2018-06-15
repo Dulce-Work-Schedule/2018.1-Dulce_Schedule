@@ -3,54 +3,131 @@ var Promise = require('bluebird');
 var schedule_db = 'schedules'
 var schedule_settings_db = 'scheduleSettings'
 
+function get_schedule_duration(start_time, end_time){
+  // The diference between timês is given in milliseconds. We are expecting hours,
+  //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
+  return duration = (end_time - start_time)/3600000.0
+}
+
+// function verifica_horas_dia(schedule, scheduleSettings, err, list){
+// else{
+//       start_of_week = new Date(schedule.start_time.getFullYear(), schedule.start_time.getMonth(), (schedule.start_time.getDate() - schedule.start_time.getDay()), 0, 0, 0);
+//       end_of_week = new Date(schedule.start_time.getFullYear(), schedule.start_time.getMonth(), (schedule.start_time.getDate() - schedule.start_time.getDay() + 7), 0, 0, 0);
+//
+//       schedule.list$(
+//       {
+//         and$: [
+//           {or$:[
+//             {start_time: {
+//               $gte: start_of_week,
+//               $lt: end_of_week
+//             }},
+//             {end_time: {
+//               $lte: end_of_week,
+//               $gte: start_of_week
+//             }}
+//           ]},
+//           {profile_id: schedule.profile_id}
+//         ]
+//       },function(err, list){
+//
+//       })
+//     }
+//   }
+// }
+
 module.exports = function(options){
-    this.add('role:schedule,cmd:createSchedule', async function create (msg,respond) {
-      var schedule = this.make(schedule_db)
-      var scheduleSettings = this.make(schedule_settings_db)
-      result = {"aqui":"aqui"}
-      var worked_hours=0;
-      schedule.start_time = new Date(msg.start_time)
-      schedule.end_time = new Date(msg.end_time)
-      schedule.sector_id = msg.sector_id
-      schedule.profile_id = msg.profile_id
+  this.add('role:schedule,cmd:createSchedule', async function create (msg,respond) {
+    var schedule = this.make(schedule_db)
+    var scheduleSettings = this.make(schedule_settings_db)
+    result = {}
+    var worked_hours=0;
+    schedule.start_time = new Date(msg.start_time)
+    schedule.end_time = new Date(msg.end_time)
+    schedule.sector_id = msg.sector_id
+    schedule.profile_id = msg.profile_id
 
-      // validar apenas mongo object IDs no caso do profile e do sector
+    // validar apenas mongo object IDs no caso do profile e do sector
 
+    if (get_schedule_duration(schedule.start_time, schedule.end_time) < scheduleSettings.min_hours_schedule){
+      result.min_hours_limit_error = 'Limite mínimo de '+ scheduleSettings.min_hours_schedule +' horas por horário'
+      result.success = false;
+      respond(null, result)
+    }
 
-      // validate if have any schedule conflict has occurred
-      var list$ = Promise.promisify(schedule.list$, { context: schedule });
-      var valid = true;
-      await list$(
-        {
-          and$: [
-            {or$:[
-              {start_time: {
-                $gte: schedule.start_time,
-                $lt: schedule.end_time
-              }},
-              {end_time: {
-                $lte: schedule.end_time,
-                $gt: schedule.start_time
-              }}
-            ]},
-            {profile_id: schedule.profile_id},
-            {sector_id: schedule.sector_id}
-          ]
-        })
-        .then(await function(list){
-          if (list.length != 0){
-            
-            // result.
-          } else
-            valid = true;
-        })
-        .catch(function(ameixa) {
-          console.log('error')
-        })
+    // validate if have any schedule conflict has occurred
+    var list$ = Promise.promisify(schedule.list$, { context: schedule });
+    await list$(
+    {
+      and$: [
+        {or$:[
+          {start_time: {
+            $gte: schedule.start_time,
+            $lt: schedule.end_time
+          }},
+          {end_time: {
+            $lte: schedule.end_time,
+            $gt: schedule.start_time
+          }}
+        ]},
+        {profile_id: schedule.profile_id},
+        {sector_id: schedule.sector_id}
+      ]
+    })
+    .then(await function(list){
+      if (list.length != 0){
+        result.conflicts_error = 'Plantonista já possui um horário de '+ list[0].start_time + ' à ' + list[0].end_time;
+        result.success = false;
+        respond(null, result);
+      } else {
+        // sucess
+        // nothing to do
+      }
+    })
+    .catch(function(err) {
+      console.log('error')
+    })
 
-        console.log(valid);
-      if (!valid)
-        return respond(null, {success:false, message: 'Plantonista já possui um horário :('})
+    var start_day = new Date(schedule.start_time);
+    var end_day = new Date(schedule.start_time);
+    // Criando intervalo de 1 dia
+    start_day.setHours(0, 0);
+    end_day.setHours(24,0);
+    worked_hours_day = 0;
+
+    await list$(
+    {
+      and$: [
+        {or$:[
+          {start_time: {
+            $gte: start_day,
+            $lt: end_day
+          }},
+          {end_time: {
+            $lte: end_day,
+            $gte: start_day
+          }}
+        ]},
+        {profile_id: schedule.profile_id},
+        {sector_id: schedule.sector_id}
+      ]
+    })
+    .then(await function(list){
+      list.forEach(function(time){
+        console.log('Parcial' + worked_hours_day);
+        worked_hours_day += get_schedule_duration(time.start_time, time.end_time)
+      })
+      if ((worked_hours_day + get_schedule_duration(schedule.start_time, schedule.end_time)) > scheduleSettings.max_hours_day){
+        result.max_hours_limit = 'Você já tem ' + worked_hours + 'horas nesse dia. ' + 'O limite é de '+ scheduleSettings.max_hours_day +' horas por dia'
+        return result;
+      } else {
+        // sucess
+        // nothing to do
+      }
+    })
+    .catch(function(err) {
+      console.log('error')
+    })
 
 
       month = parseInt(schedule.start_time.getMonth());
@@ -75,9 +152,13 @@ module.exports = function(options){
 
         console.log('depois')
 
-      schedule.save$(function(err,schedule){
-        respond(null, schedule)
-      })
+      if (Object.entries(result)[0]) {
+        respond(null, result)
+      } else {
+        schedule.save$(function(err,schedule){
+          respond(null, schedule)
+        })
+      }
   })
 
 // #############################################################################

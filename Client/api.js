@@ -1,11 +1,5 @@
 currentWeekNumber = require('current-week-number');
 
-
-function get_schedule_duration(start_time, end_time){
-  // The diference between timês is given in milliseconds. We are expecting hours,
-  //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
-  return duration = (end_time - start_time)/3600000.0
-}
 module.exports = function api(options){
 
 //##############################################################################
