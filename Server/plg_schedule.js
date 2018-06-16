@@ -17,8 +17,8 @@ module.exports = function(options){
     result = {};
     schedule.start_time = new Date(msg.start_time);
     schedule.end_time = new Date(msg.end_time);
-    schedule.sector_id = msg.sector_id;
-    schedule.profile_id = msg.profile_id;
+    schedule.sector_id = parseInt(msg.sector_id);
+    schedule.profile_id = parseInt(msg.profile_id);
 
     // validar apenas mongo object IDs no caso do profile e do sector
 
@@ -160,7 +160,7 @@ module.exports = function(options){
     end_of_month = new Date(year, month+1, 1);
     worked_hours_in_a_month = 0
 
-    schedule.list$(
+    await list$(
       {
         and$: [
           {start_time: {
@@ -170,13 +170,21 @@ module.exports = function(options){
           {profile_id: schedule.profile_id}
         ]
       })
-      .then(function(list){
+      .then(await function(list){
         list.forEach(function(time){
           worked_hours_in_a_month += get_schedule_duration(time.start_time, time.end_time)
         })
+
+        if ((worked_hours_in_a_month + get_schedule_duration(schedule.start_time,schedule.end_time)) > schedule_settings.max_hours_month){
+          result.max_hours_limit = 'Você já tem ' + worked_hours_in_a_month + 'horas nessa més. ' + 'O limite é de '+ scheduleSettings.max_hours_month +' horas por més'
+          return result;
+        } else {
+          //success
+          //nothing to do
+        }
       })
       .catch(function(error){
-
+        console.log(error);
       })
 
       if(Object.entries(result)[0]){
