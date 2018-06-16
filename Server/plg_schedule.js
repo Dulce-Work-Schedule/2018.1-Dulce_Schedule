@@ -1,61 +1,36 @@
 var Promise = require('bluebird');
 
+// BDs names
 var schedule_db = 'schedules'
 var schedule_settings_db = 'scheduleSettings'
 
 function get_schedule_duration(start_time, end_time){
-  // The diference between timês is given in milliseconds. We are expecting hours,
+  // The diference between times is given in milliseconds. We are expecting hours,
   //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
   return duration = (end_time - start_time)/3600000.0
 }
 
-// function verifica_horas_dia(schedule, scheduleSettings, err, list){
-// else{
-//       start_of_week = new Date(schedule.start_time.getFullYear(), schedule.start_time.getMonth(), (schedule.start_time.getDate() - schedule.start_time.getDay()), 0, 0, 0);
-//       end_of_week = new Date(schedule.start_time.getFullYear(), schedule.start_time.getMonth(), (schedule.start_time.getDate() - schedule.start_time.getDay() + 7), 0, 0, 0);
-//
-//       schedule.list$(
-//       {
-//         and$: [
-//           {or$:[
-//             {start_time: {
-//               $gte: start_of_week,
-//               $lt: end_of_week
-//             }},
-//             {end_time: {
-//               $lte: end_of_week,
-//               $gte: start_of_week
-//             }}
-//           ]},
-//           {profile_id: schedule.profile_id}
-//         ]
-//       },function(err, list){
-//
-//       })
-//     }
-//   }
-// }
-
 module.exports = function(options){
   this.add('role:schedule,cmd:createSchedule', async function create (msg,respond) {
-    var schedule = this.make(schedule_db)
-    var scheduleSettings = this.make(schedule_settings_db)
-    result = {}
+    var schedule = this.make(schedule_db);
+    var scheduleSettings = this.make(schedule_settings_db);
+    result = {};
     var worked_hours=0;
-    schedule.start_time = new Date(msg.start_time)
-    schedule.end_time = new Date(msg.end_time)
-    schedule.sector_id = msg.sector_id
-    schedule.profile_id = msg.profile_id
+    schedule.start_time = new Date(msg.start_time);
+    schedule.end_time = new Date(msg.end_time);
+    schedule.sector_id = msg.sector_id;
+    schedule.profile_id = msg.profile_id;
 
     // validar apenas mongo object IDs no caso do profile e do sector
 
+    // validates if the amount of minimum hours in a schedule is less than allowed
     if (get_schedule_duration(schedule.start_time, schedule.end_time) < scheduleSettings.min_hours_schedule){
       result.min_hours_limit_error = 'Limite mínimo de '+ scheduleSettings.min_hours_schedule +' horas por horário'
       result.success = false;
       respond(null, result)
     }
 
-    // validate if have any schedule conflict has occurred
+    // validates if any schedule conflict has occurred
     var list$ = Promise.promisify(schedule.list$, { context: schedule });
     await list$(
     {
@@ -88,24 +63,25 @@ module.exports = function(options){
       console.log('error')
     })
 
-    var start_day = new Date(schedule.start_time);
-    var end_day = new Date(schedule.start_time);
-    // Criando intervalo de 1 dia
-    start_day.setHours(0, 0);
-    end_day.setHours(24,0);
-    worked_hours_day = 0;
+    // creates a one day interval
+    var first_hour_of_day = new Date(schedule.start_time);
+    var last_hour_of_day = new Date(schedule.start_time);
+    first_hour_of_day.setHours(0, 0);
+    last_hour_of_day.setHours(24,0);
+    worked_hours_in_a_day = 0;
 
+    // lists every schedule in a one day interval
     await list$(
     {
       and$: [
         {or$:[
           {start_time: {
-            $gte: start_day,
-            $lt: end_day
+            $gte: first_hour_of_day,
+            $lt: last_hour_of_day
           }},
           {end_time: {
-            $lte: end_day,
-            $gte: start_day
+            $lte: last_hour_of_day,
+            $gte: first_hour_of_day
           }}
         ]},
         {profile_id: schedule.profile_id},
@@ -113,11 +89,13 @@ module.exports = function(options){
       ]
     })
     .then(await function(list){
+      // Walks on the schedules list and count the amount of hours
       list.forEach(function(time){
-        console.log('Parcial' + worked_hours_day);
-        worked_hours_day += get_schedule_duration(time.start_time, time.end_time)
+        console.log('Parcial' + worked_hours_in_a_day);
+        worked_hours_in_a_day += get_schedule_duration(time.start_time, time.end_time)
       })
-      if ((worked_hours_day + get_schedule_duration(schedule.start_time, schedule.end_time)) > scheduleSettings.max_hours_day){
+      // validates if the amount of hours in a day is bigger than than allowed
+      if ((worked_hours_in_a_day + get_schedule_duration(schedule.start_time, schedule.end_time)) > scheduleSettings.max_hours_day){
         result.max_hours_limit = 'Você já tem ' + worked_hours + 'horas nesse dia. ' + 'O limite é de '+ scheduleSettings.max_hours_day +' horas por dia'
         return result;
       } else {
@@ -129,31 +107,81 @@ module.exports = function(options){
       console.log('error')
     })
 
+    // crates an interval of one week
+    first_day_of_week = new Date(schedule.start_time.getFullYear(),
+                            schedule.start_time.getMonth(),
+                            (schedule.start_time.getDate() -
+                            schedule.start_time.getDay()), 0, 0, 0);
+    last_day_of_week = new Date(schedule.start_time.getFullYear(),
+                          schedule.start_time.getMonth(),
+                          (schedule.start_time.getDate() -
+                          schedule.start_time.getDay() + 7), 0, 0, 0);
+    worked_hours_in_a_week = 0;
 
-      month = parseInt(schedule.start_time.getMonth());
-      year = parseInt(schedule.start_time.getFullYear());
-      start_month = new Date(year, month, 1);
-      end_month = new Date(year, month+1, 1);
+    // lists every schedule in a one week interval
+    await list$(
+    {
+      and$: [
+        {or$:[
+          {start_time: {
+            $gte: first_day_of_week,
+            $lt: last_day_of_week
+          }},
+          {end_time: {
+            $lte: last_day_of_week,
+            $gte: first_day_of_week
+          }}
+        ]},
+        {profile_id: schedule.profile_id}
+      ]
+    })
+    .then(await function(list){
+      // Walks on the schedules list and count the amount of hours
+      list.forEach(function(time){
+        console.log('Parcial' + worked_hours_in_a_week);
+        worked_hours_in_a_week += get_schedule_duration(time.start_time, time.end_time)
+      })
+      // validates if the amount of hours in a week is bigger than than allowed
+      if ((worked_hours_in_a_week + get_schedule_duration(schedule.start_time, schedule.end_time)) > scheduleSettings.max_hours_week){
+        result.max_hours_limit = 'Você já tem ' + worked_hours_in_a_week + 'horas nessa semana. ' + 'O limite é de '+ scheduleSettings.max_hours_week +' horas por semana'
+        return result;
+      } else {
+        // sucess
+        // nothing to do
+      }
+    })
+    .catch(function(error){
+      console.log('error')
+    })
 
-      schedule.list$(
-        {
-          start_time: {
-            $gte: start_month,
-            $lt: end_month
-          },
-          profile_id: schedule.profile_id,
-          sector_id: schedule.sector_id
+    // creates an interval of one month
+    month = parseInt(schedule.start_time.getMonth());
+    year = parseInt(schedule.start_time.getFullYear());
+    start_month = new Date(year, month, 1);
+    end_month = new Date(year, month+1, 1);
+
+    schedule.list$(
+      {
+        start_time: {
+          $gte: start_month,
+          $lt: end_month
         },
-        function(err,list){
-          list.forEach(function(time){
-            worked_hours += get_schedule_duration(time.start_time, time.end_time)
-          })
+        profile_id: schedule.profile_id,
+        sector_id: schedule.sector_id
+      })
+      .then(function(list){
+        list.forEach(function(time){
+          worked_hours += get_schedule_duration(time.start_time, time.end_time)
         })
 
-        console.log('depois')
+      })
+      .catch(function(error){
 
-      if (Object.entries(result)[0]) {
-        respond(null, result)
+      })
+
+      })
+
+        console.log('depois')
       } else {
         schedule.save$(function(err,schedule){
           respond(null, schedule)
