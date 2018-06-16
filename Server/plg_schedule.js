@@ -89,6 +89,7 @@ module.exports = function(options){
 // #############################################################################
 
   this.add('role:schedule,cmd:listYearByProfile', function (msg, respond) {
+    console.log("Msg:")
     console.log(msg);
     var schedule = this.make(schedule_db);
     schedule.profile_id = msg.profile_id;
@@ -97,13 +98,22 @@ module.exports = function(options){
 
     schedule.list$(
       {
-        start_time: {
-          $gte: start_year,
-          $lt: end_year
-        },
-        profile_id: schedule.profile_id,
+        and$: [
+          {or$:[
+            {start_time: {
+              $gte: start_year,
+              $lt: end_year
+            }},
+            {end_time: {
+              $lte: end_year,
+              $gt: start_year
+            }}
+          ]},
+          {profile_id: schedule.profile_id},
+        ]
       },
       function(err,list){
+        console.log(list)
         respond (null, list)
     })
   })
@@ -117,13 +127,24 @@ this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
   start_year = msg.start_year;
   end_year = msg.end_year;
 
+  console.log("Start year:")
+  console.log(start_year)
+
   schedule.list$(
     {
-      start_time: {
-        $gte: start_year,
-        $lt: end_year
-      },
-      sector_id: schedule.sector_id,
+      and$: [
+        {or$:[
+          {start_time: {
+            $gte: start_year,
+            $lt: end_year
+          }},
+          {end_time: {
+            $lte: end_year,
+            $gt: start_year
+          }}
+        ]},
+        {sector_id: schedule.sector_id},
+      ]
     },
     function(err,list){
       respond (null, list)
