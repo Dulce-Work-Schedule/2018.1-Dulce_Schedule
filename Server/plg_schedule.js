@@ -15,7 +15,6 @@ module.exports = function(options){
     var schedule = this.make(schedule_db);
     var scheduleSettings = this.make(schedule_settings_db);
     result = {};
-    var worked_hours=0;
     schedule.start_time = new Date(msg.start_time);
     schedule.end_time = new Date(msg.end_time);
     schedule.sector_id = msg.sector_id;
@@ -96,7 +95,7 @@ module.exports = function(options){
       })
       // validates if the amount of hours in a day is bigger than than allowed
       if ((worked_hours_in_a_day + get_schedule_duration(schedule.start_time, schedule.end_time)) > scheduleSettings.max_hours_day){
-        result.max_hours_limit = 'Você já tem ' + worked_hours + 'horas nesse dia. ' + 'O limite é de '+ scheduleSettings.max_hours_day +' horas por dia'
+        result.max_hours_limit = 'Você já tem ' + worked_hours_in_a_day + 'horas nesse dia. ' + 'O limite é de '+ scheduleSettings.max_hours_day +' horas por dia'
         return result;
       } else {
         // sucess
@@ -157,30 +156,30 @@ module.exports = function(options){
     // creates an interval of one month
     month = parseInt(schedule.start_time.getMonth());
     year = parseInt(schedule.start_time.getFullYear());
-    start_month = new Date(year, month, 1);
-    end_month = new Date(year, month+1, 1);
+    start_of_month = new Date(year, month, 1);
+    end_of_month = new Date(year, month+1, 1);
+    worked_hours_in_a_month = 0
 
     schedule.list$(
       {
-        start_time: {
-          $gte: start_month,
-          $lt: end_month
-        },
-        profile_id: schedule.profile_id,
-        sector_id: schedule.sector_id
+        and$: [
+          {start_time: {
+            $gte: start_of_month,
+            $lt: end_of_month
+          }},
+          {profile_id: schedule.profile_id}
+        ]
       })
       .then(function(list){
         list.forEach(function(time){
-          worked_hours += get_schedule_duration(time.start_time, time.end_time)
+          worked_hours_in_a_month += get_schedule_duration(time.start_time, time.end_time)
         })
-
       })
       .catch(function(error){
 
       })
 
-      })
-
+      if(Object.entries(result)[0]){
         console.log('depois')
       } else {
         schedule.save$(function(err,schedule){
