@@ -1,25 +1,34 @@
+
 currentWeekNumber = require('current-week-number');
+
+// The RegExp Object above validates MongoBD ObjectIds
+var checkObjectId = new RegExp('^[0-9a-fA-F]{24}$');
 
 module.exports = function api(options){
 
-//##############################################################################
-
-  this.add('role:api,path:createSchedule', function(msg,respond){
-    if (msg.args.body == {}){
-      message.body.error = 'Nenhum parametro informado';
-    }
-    var sector_id = msg.args.body.sector_id
-    var profile_id = msg.args.body.profile_id
-    var start_time = null
-    var end_time = null
+//#############################################################################
+  this.add('role:api,path:createSchedule', function(msg, respond){
+    // result variable store attribute errors or the success created schedule
     var result = {};
+
+    // check if body is empty.
+    if (msg.args.body == {}){
+      result.body_error = 'Nenhum parametro informado';
+      result.sucess = false;
+      respond(null, result);
+    }
+
+    var sector_id = msg.args.body.sector_id;
+    var profile_id = msg.args.body.profile_id;
+    var start_time = null;
+    var end_time = null;
 
     // validate start time
     if (msg.args.body.start_time == null) {
       result.start_time_null_error = 'Horário inicial não pode ser nulo';
       console.log(result.start_time_null_error);
     } else {
-      start_time = new Date(msg.args.body.start_time)
+      start_time = new Date(msg.args.body.start_time);
       if (start_time == "Invalid Date") {
         result.start_time_invalid_error = 'Horário inicial inválido';
         console.log(result.start_time_invalid_error);
@@ -30,7 +39,7 @@ module.exports = function api(options){
       result.end_time_null_error = 'Horário final não pode ser nulo';
       console.log(result.end_time_null_error);
     } else {
-      end_time = new Date(msg.args.body.end_time)
+      end_time = new Date(msg.args.body.end_time);
       if (end_time == "Invalid Date") {
         result.end_time_invalid_error = 'Horário final inválido';
         console.log(result.end_time_invalid_error);
@@ -38,26 +47,25 @@ module.exports = function api(options){
     }
     // validate sector id
     if (sector_id == null || sector_id == "") {
-      result.sector_id_error = 'O setor é obrigatório.';
+      result.sector_id_error = 'O setor é obrigatório';
       console.log(result.sector_id_error);
-    } else if (Array.isArray(sector_id)) {
-      result.multiple_sector_id_error = 'Só é permitido um setor';
-      console.log(result.multiple_sector_id_error);
+    } else if (checkObjectId.test(sector_id)) {
+      result.invalid_sector_id_error = 'sector_id inválido'
     }
+
     // validate profile id
     if (profile_id == null || profile_id == "") {
-      result.profile_id_error = 'O usuário é obrigatório.';
+      result.profile_id_error = 'O usuário é obrigatório';
       console.log(result.profile_id_error);
-    } else if (Array.isArray(profile_id)) {
-      result.profile_id_array_error = 'Só é permitido um perfil de usuário.';
-      console.log(result.profile_id_array_error);
+    } else if (checkObjectId.test(profile_id)) {
+      result.invalid_profile_id_error = 'profile_id inválido'
     }
     // validade interval between start time and end time
     if((end_time - start_time) < 0){
-      result.date_interval_error = 'O fim do horário deve ser maior que o início do horário.'
+      result.date_interval_error = 'O fim do horário deve ser maior que o início do horário'
       console.log(result.date_interval_error);
     }else if((end_time - start_time) == 0){
-      result.date_equals_error = 'O horário de início e de fim não podem ser iguais.'
+      result.date_equals_error = 'O horário de início e de fim não podem ser iguais'
       console.log(result.date_interval_error);
     }
     // verify that an error has occurred
@@ -69,16 +77,15 @@ module.exports = function api(options){
     // else, everything sucess
     } else {
       this.act('role:schedule,cmd:createSchedule',{
-        start_time:start_time,
-        end_time:end_time,
-        sector_id:sector_id,
-        profile_id:profile_id
+        start_time: start_time,
+        end_time: end_time,
+        sector_id: sector_id,
+        profile_id: profile_id
       }, respond)
     }
   });
 
-//##############################################################################
-
+//#############################################################################
   this.add('role:api,path:createScheduleSettings', function(msg, respond){
     var max_hours_month = parseInt(msg.args.body.max_hours_month)
     var max_hours_week = parseInt(msg.args.body.max_hours_week)
@@ -181,7 +188,7 @@ module.exports = function api(options){
     }
   });
 
-//##############################################################################
+//#############################################################################
 
   this.add('role:api,path:listYearByProfile', function (msg, respond) {
       console.log(msg.args)
@@ -205,7 +212,7 @@ module.exports = function api(options){
       }, respond)
   });
 
-//##############################################################################
+//#############################################################################
 
   this.add('role:api,path:listYearBySector', function (msg, respond) {
     console.log(msg.args)
@@ -229,7 +236,7 @@ module.exports = function api(options){
     }, respond)
   });
 
-//##############################################################################
+//#############################################################################
 
   this.add('role:api,path:listYearByUser', function (msg, respond) {
     console.log(msg.args)
@@ -253,7 +260,7 @@ module.exports = function api(options){
     }, respond)
   });
 
-//##############################################################################
+//#############################################################################
 
   this.add('role:api,path:listByProfile', function (msg, respond) {
     var id = msg.args.query.id
@@ -263,13 +270,13 @@ module.exports = function api(options){
     }, respond)
   });
 
-//##############################################################################
+//#############################################################################
 
   this.add('role:api,path:error', function(msg, respond){
       this.act('role:schedule, cmd:error',{}, respond)
   });
 
-//##############################################################################
+//#############################################################################
 
   this.add('init:api', function (msg, respond) {
     this.act('role:web', {
