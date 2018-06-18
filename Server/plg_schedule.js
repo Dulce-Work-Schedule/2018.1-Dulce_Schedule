@@ -4,53 +4,96 @@ var Promise = require('bluebird');
 var schedule_db = 'schedules'
 var schedule_settings_db = 'scheduleSettings'
 
+// 3600000.0 (1000ms * 60s * 60m), is the number of milliseconds in 1 hour.
+var milliseconds_in_one_hour = 3600000.0
+
+
+// get_schedule_duration returns schedule duration in hours
 function get_schedule_duration(start_time, end_time){
-  // The diference between times is given in milliseconds. We are expecting hours,
-  //so wu divide by 3600000.0 that is the number of milliseconds in 1 hour
-  return duration = (end_time - start_time)/3600000.0
+  // The diference between Dates are given in milliseconds.
+  // So we divide by the amount of milliseconds in 1 hour
+  var duration = (
+    (end_time - start_time) /
+    milliseconds_in_one_hour
+  );
+  return duration;
+}
+
+// Alternative python string.format() for javascript
+// First, checks if it isn't implemented yet.
+if (!String.prototype.format) {
+  String.prototype.format = function(){
+    var args = arguments;
+    var replaceable_count = (this.match(/{}/g) || []).length;
+    if(args.length < replaceable_count){
+      console.log(
+        "Expecting " + replaceable_count + "arguments, " +
+        args.length + 'found.');
+      return this
+    }else{
+      var new_string = this;
+      for (i=0; i < replaceable_count; i++){
+        new_string = new_string.replace('{}', args[i]);
+      }
+      return new_string
+    }
+  };
 }
 
 module.exports = function(options){
   this.add('role:schedule,cmd:createSchedule', async function create (msg,respond) {
+    // schedule Entity
     var schedule = this.make(schedule_db);
+    // scheduleSettings Entity
     var scheduleSettings = this.make(schedule_settings_db);
-    result = {};
-    schedule.start_time = new Date(msg.start_time);
-    schedule.end_time = new Date(msg.end_time);
-    schedule.sector_id = parseInt(msg.sector_id);
-    schedule.profile_id = parseInt(msg.profile_id);
+    // Promise of Schedule list$ function
+    var list$ = Promise.promisify(schedule.list$, { context: schedule });
 
-    // validar apenas mongo object IDs no caso do profile e do sector
+    var result = {};
+
+    var start_time = new Date(msg.start_time);
+    var end_time = new Date(msg.end_time);
+    var sector_id = msg.sector_id;
+    var profile_id = msg.profile_id;
 
     // validates if the amount of minimum hours in a schedule is less than allowed
-    if (get_schedule_duration(schedule.start_time, schedule.end_time) < scheduleSettings.min_hours_schedule){
-      result.min_hours_limit_error = 'Limite mínimo de '+ scheduleSettings.min_hours_schedule +' horas por horário'
+    if (get_schedule_duration(start_time, end_time) < scheduleSettings.min_hours_schedule){
+      result.min_hours_limit_error = (
+        'Limite mínimo de {} horas por horário'.format(
+          scheduleSettings.min_hours_schedule
+        )
+      )
       result.success = false;
       respond(null, result)
     }
 
     // validates if any schedule conflict has occurred
-    var list$ = Promise.promisify(schedule.list$, { context: schedule });
     await list$(
     {
       and$: [
         {or$:[
           {start_time: {
-            $gte: schedule.start_time,
-            $lt: schedule.end_time
+            $gte: start_time,
+            $lt: end_time
           }},
           {end_time: {
-            $lte: schedule.end_time,
-            $gt: schedule.start_time
+            $lte: end_time,
+            $gt: start_time
           }}
         ]},
-        {profile_id: schedule.profile_id},
-        {sector_id: schedule.sector_id}
+        {profile_id: profile_id},
+        {sector_id: sector_id}
       ]
     })
-    .then(await function(list){
-      if (list.length != 0){
-        result.conflicts_error = 'Plantonista já possui um horário de '+ list[0].start_time + ' à ' + list[0].end_time;
+    .then(await function(list_of_schedukes){
+      if (list_of_schedukes.length != 0){
+        result.conflicts_error = (
+          '{} já possui um horário de {} à {}'.format(
+            'Plantonista',
+            list_of_schedukes[0].start_time,
+            list_of_schedukes[0].end_time
+          )
+      );
         result.success = false;
         respond(null, result);
       } else {
@@ -63,11 +106,11 @@ module.exports = function(options){
     })
 
     // creates a one day interval
-    var first_hour_of_day = new Date(schedule.start_time);
-    var last_hour_of_day = new Date(schedule.start_time);
+    var first_hour_of_day = new Date(start_time);
+    var last_hour_of_day = new Date(start_time);
     first_hour_of_day.setHours(0, 0);
     last_hour_of_day.setHours(24,0);
-    worked_hours_in_a_day = 0;
+    current_amount_of_day_work_hours = 0;
 
     // lists every schedule in a one day interval
     await list$(
@@ -83,19 +126,41 @@ module.exports = function(options){
             $gte: first_hour_of_day
           }}
         ]},
-        {profile_id: schedule.profile_id},
-        {sector_id: schedule.sector_id}
+        {profile_id: profile_id},
+        {sector_id: sector_id}
       ]
     })
-    .then(await function(list){
-      // Walks on the schedules list and count the amount of hours
-      list.forEach(function(time){
-        console.log('Parcial' + worked_hours_in_a_day);
-        worked_hours_in_a_day += get_schedule_duration(time.start_time, time.end_time)
-      })
-      // validates if the amount of hours in a day is bigger than than allowed
-      if ((worked_hours_in_a_day + get_schedule_duration(schedule.start_time, schedule.end_time)) > scheduleSettings.max_hours_day){
-        result.max_hours_limit = 'Você já tem ' + worked_hours_in_a_day + 'horas nesse dia. ' + 'O limite é de '+ scheduleSettings.max_hours_day +' horas por dia'
+    .then(await function(list_of_schedukes){
+      // Walks on the list of schedules and counts the amount of hours worked
+      list_of_schedukes.forEach(
+        function(schedule_element){
+          console.log(
+            'Parcial Working Hours: <|{}|>'.format(
+              current_amount_of_day_work_hours
+            )
+          );
+          current_amount_of_day_work_hours = (
+            current_amount_of_day_work_hours +
+            get_schedule_duration(
+              schedule_element.start_time,
+              schedule_element.end_time
+            )
+          );
+        }
+      )
+
+      new_amount_of_day_work_hours = (
+        current_amount_of_day_work_hours +
+        get_schedule_duration(start_time, end_time)
+      )
+      // validates if the amount of hours in a day is bigger than allowed
+      if (new_amount_of_day_work_hours > scheduleSettings.max_hours_day){
+        result.max_hours_limit_error = (
+          'Você já tem {} horas nesse dia. O limite é de {} horas por dia'.format(
+            worked_hours_in_a_day,
+            scheduleSettings.max_hours_day
+          )
+        );
         return result;
       } else {
         // sucess
@@ -107,15 +172,16 @@ module.exports = function(options){
     })
 
     // crates an interval of one week
-    first_day_of_week = new Date(schedule.start_time.getFullYear(),
-                            schedule.start_time.getMonth(),
-                            (schedule.start_time.getDate() -
-                            schedule.start_time.getDay()), 0, 0, 0);
-    last_day_of_week = new Date(schedule.start_time.getFullYear(),
-                          schedule.start_time.getMonth(),
-                          (schedule.start_time.getDate() -
-                          schedule.start_time.getDay() + 7), 0, 0, 0);
-    worked_hours_in_a_week = 0;
+    first_day_of_week = new Date(start_time.getFullYear(),
+                            start_time.getMonth(),
+                            (start_time.getDate() -
+                            start_time.getDay()), 0, 0, 0);
+    last_day_of_week = new Date(start_time.getFullYear(),
+                          start_time.getMonth(),
+                          (start_time.getDate() -
+                          start_time.getDay() + 7), 0, 0, 0);
+
+    var current_amount_of_week_work_hours = 0;
 
     // lists every schedule in a one week interval
     await list$(
@@ -131,22 +197,37 @@ module.exports = function(options){
             $gte: first_day_of_week
           }}
         ]},
-        {profile_id: schedule.profile_id}
+        {profile_id: profile_id}
       ]
     })
-    .then(await function(list){
+    .then(await function(list_of_schedukes){
       // Walks on the schedules list and count the amount of hours
-      list.forEach(function(time){
-        console.log('Parcial' + worked_hours_in_a_week);
-        worked_hours_in_a_week += get_schedule_duration(time.start_time, time.end_time)
+      list_of_schedukes.forEach(function(time){
+        console.log('Parcial: {}'.format(current_amount_of_week_work_hours));
+        current_amount_of_week_work_hours = (
+          current_amount_of_week_work_hours +
+          get_schedule_duration(
+            time.start_time,
+            time.end_time
+          )
+        )
       })
-      // validates if the amount of hours in a week is bigger than than allowed
-      if ((worked_hours_in_a_week + get_schedule_duration(schedule.start_time, schedule.end_time)) > scheduleSettings.max_hours_week){
-        result.max_hours_limit = 'Você já tem ' + worked_hours_in_a_week + 'horas nessa semana. ' + 'O limite é de '+ scheduleSettings.max_hours_week +' horas por semana'
-        return result;
+
+      var new_amount_of_week_work_hours = (
+        current_amount_of_week_work_hours +
+        get_schedule_duration(start_time, end_time)
+      );
+      // validates if the amount of hours in a week is bigger than allowed
+      if (new_amount_of_week_work_hours > scheduleSettings.max_hours_week){
+        result.max_week_hours_limit_error = (
+          'Você já tem {} horas nessa semana. O limite é de {} horas por semana'.format(
+            current_amount_of_week_work_hours,
+            scheduleSettings.max_hours_week
+          )
+        );
+        respond(null, result);
       } else {
-        // sucess
-        // nothing to do
+        // sucess!! nothing to do
       }
     })
     .catch(function(error){
@@ -154,11 +235,11 @@ module.exports = function(options){
     })
 
     // creates an interval of one month
-    month = parseInt(schedule.start_time.getMonth());
-    year = parseInt(schedule.start_time.getFullYear());
+    month = parseInt(start_time.getMonth());
+    year = parseInt(start_time.getFullYear());
     start_of_month = new Date(year, month, 1);
     end_of_month = new Date(year, month+1, 1);
-    worked_hours_in_a_month = 0
+    var current_amount_of_month_work_hours = 0
 
     await list$(
       {
@@ -167,17 +248,31 @@ module.exports = function(options){
             $gte: start_of_month,
             $lt: end_of_month
           }},
-          {profile_id: schedule.profile_id}
+          {profile_id: profile_id}
         ]
       })
-      .then(await function(list){
-        list.forEach(function(time){
-          worked_hours_in_a_month += get_schedule_duration(time.start_time, time.end_time)
+      .then(await function(list_of_schedukes){
+
+        list_of_schedukes.forEach(function(time){
+          current_amount_of_month_work_hours = (
+            current_amount_of_month_work_hours +
+            get_schedule_duration(time.start_time, time.end_time)
+          );
         })
 
-        if ((worked_hours_in_a_month + get_schedule_duration(schedule.start_time,schedule.end_time)) > schedule_settings.max_hours_month){
-          result.max_hours_limit = 'Você já tem ' + worked_hours_in_a_month + 'horas nessa més. ' + 'O limite é de '+ scheduleSettings.max_hours_month +' horas por més'
-          return result;
+        var new_amount_of_month_work_hours = (
+          current_amount_of_month_work_hours +
+          get_schedule_duration(start_time,end_time));
+        // validates if the amount of hours in month is bigger than allowed
+        if (new_amount_of_month_work_hours > schedule_settings.max_hours_month){
+          result.max_hours_limit_error = (
+            'Você já tem {} horas nesse mês. O limite é de {} horas por mês'.format(
+              current_amount_of_month_work_hours,
+              scheduleSettings.max_hours_month
+            )
+          );
+          result.success = false;
+          respond(null, result);
         } else {
           //success
           //nothing to do
@@ -188,10 +283,12 @@ module.exports = function(options){
       })
 
       if(Object.entries(result)[0]){
-        console.log('depois')
+        console.log('Alguns erros foram encontrados...');
+        console.log(result);
+        respond(null, result);
       } else {
         schedule.save$(function(err,schedule){
-          respond(null, schedule)
+          respond(null, schedule);
         })
       }
   })
@@ -201,7 +298,7 @@ module.exports = function(options){
   this.add('role:schedule, cmd:listByProfile', function (msg, respond) {
       var schedule = this.make(schedule_db);
       var id = msg.id;
-      console.log("id informado:" + id);
+      console.log("id informado: {}".format(id));
       schedule.list$(
         {
           profile_id: id,
