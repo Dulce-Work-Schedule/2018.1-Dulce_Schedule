@@ -1,4 +1,4 @@
-### Para mais informações visite nossa página [Dulce](https://dulce-work-schedule.github.io/2018.1-Dulce_App/)
+[<img src="Docs/DulceHorizontal.svg" width="1300" title="">](https://dulce-work-schedule.github.io/)
 # Schedule
 [![Build Status](https://travis-ci.org/Dulce-Work-Schedule/2018.1-Dulce_Schedule.svg?branch=master)](https://travis-ci.org/Dulce-Work-Schedule/2018.1-Dulce_Schedule)
 [![Maintainability](https://api.codeclimate.com/v1/badges/267df35cce0d25b5aaed/maintainability)](https://codeclimate.com/github/Dulce-Work-Schedule/2018.1-Dulce_Schedule/maintainability)
