@@ -52,7 +52,7 @@ sudo docker contailer ls
 
 Para acessar o mongo:
 ```bash
-$ sudo docker exec -it {CONTAILER ID} mongo mongo
+$ sudo docker exec -it $(sudo docker container ls | grep mongo | cut -f 1 -d' ') mongo mongo
 ```
 
 #### Para fechar e encerrar os dockers utilize o seguinte comando:
