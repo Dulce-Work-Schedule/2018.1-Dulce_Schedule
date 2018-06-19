@@ -9,7 +9,7 @@ var milliseconds_in_one_hour = 3600000.0
 
 
 // get_schedule_duration returns schedule duration in hours
-function get_schedule_duration(start_time, end_time){
+function get_schedule_duration( start_time, end_time){
   // The diference between Dates are given in milliseconds.
   // So we divide by the amount of milliseconds in 1 hour
   var duration = (
@@ -47,7 +47,8 @@ module.exports = function(options){
     // scheduleSettings Entity
     var scheduleSettings = this.make(schedule_settings_db);
     // Promise of Schedule list$ function
-    var list$ = Promise.promisify(schedule.list$, { context: schedule });
+    var schedule_list$ = Promise.promisify(schedule.list$, { context: schedule });
+    var settings_list$ = Promise.promisify(scheduleSettings.list$, { context: scheduleSettings });
 
     var result = {};
 
@@ -56,11 +57,33 @@ module.exports = function(options){
     var sector_id = msg.sector_id;
     var profile_id = msg.profile_id;
 
+    var settings = {}
+    settings = {
+      "max_hours_month": 145,
+      "max_hours_week": 50,
+      "min_hours_month": 60,
+      "min_hours_week": 11,
+      "templates": [1,2,3, 4]
+    }
+
+    await settings_list$({})
+      .then(await function(list_of_settings){
+        if (list_of_settings.length > 0){
+          settings = list_of_settings[0]
+        }
+      })
+      .catch(function(err){
+        result.scheduleSettings_catch_error = "Não conseguiu achar schedule settings";
+        respond(null, result);
+      })
+
+
+
     // validates if the amount of minimum hours in a schedule is less than allowed
     if (get_schedule_duration(start_time, end_time) < scheduleSettings.min_hours_schedule){
       result.min_hours_limit_error = (
         'Limite mínimo de {} horas por horário'.format(
-          scheduleSettings.min_hours_schedule
+          settings.min_hours_schedule
         )
       )
       result.success = false;
@@ -68,7 +91,7 @@ module.exports = function(options){
     }
 
     // validates if any schedule conflict has occurred
-    await list$(
+    await schedule_list$(
     {
       and$: [
         {or$:[
@@ -85,13 +108,13 @@ module.exports = function(options){
         {sector_id: sector_id}
       ]
     })
-    .then(await function(list_of_schedukes){
-      if (list_of_schedukes.length != 0){
+    .then(await function(list_of_schedules){
+      if (list_of_schedules.length != 0){
         result.conflicts_error = (
           '{} já possui um horário de {} à {}'.format(
             'Plantonista',
-            list_of_schedukes[0].start_time,
-            list_of_schedukes[0].end_time
+            list_of_schedules[0].start_time,
+            list_of_schedules[0].end_time
           )
       );
         result.success = false;
@@ -113,7 +136,7 @@ module.exports = function(options){
     current_amount_of_day_work_hours = 0;
 
     // lists every schedule in a one day interval
-    await list$(
+    await schedule_list$(
     {
       and$: [
         {or$:[
@@ -130,9 +153,9 @@ module.exports = function(options){
         {sector_id: sector_id}
       ]
     })
-    .then(await function(list_of_schedukes){
+    .then(await function(list_of_schedules){
       // Walks on the list of schedules and counts the amount of hours worked
-      list_of_schedukes.forEach(
+      list_of_schedules.forEach(
         function(schedule_element){
           console.log(
             'Parcial Working Hours: <|{}|>'.format(
@@ -154,11 +177,11 @@ module.exports = function(options){
         get_schedule_duration(start_time, end_time)
       )
       // validates if the amount of hours in a day is bigger than allowed
-      if (new_amount_of_day_work_hours > scheduleSettings.max_hours_day){
+      if (new_amount_of_day_work_hours > settings.max_hours_day){
         result.max_hours_limit_error = (
           'Você já tem {} horas nesse dia. O limite é de {} horas por dia'.format(
             worked_hours_in_a_day,
-            scheduleSettings.max_hours_day
+            settings.max_hours_day
           )
         );
         return result;
@@ -184,7 +207,7 @@ module.exports = function(options){
     var current_amount_of_week_work_hours = 0;
 
     // lists every schedule in a one week interval
-    await list$(
+    await schedule_list$(
     {
       and$: [
         {or$:[
@@ -200,9 +223,9 @@ module.exports = function(options){
         {profile_id: profile_id}
       ]
     })
-    .then(await function(list_of_schedukes){
+    .then(await function(list_of_schedules){
       // Walks on the schedules list and count the amount of hours
-      list_of_schedukes.forEach(function(time){
+      list_of_schedules.forEach(function(time){
         console.log('Parcial: {}'.format(current_amount_of_week_work_hours));
         current_amount_of_week_work_hours = (
           current_amount_of_week_work_hours +
@@ -218,11 +241,11 @@ module.exports = function(options){
         get_schedule_duration(start_time, end_time)
       );
       // validates if the amount of hours in a week is bigger than allowed
-      if (new_amount_of_week_work_hours > scheduleSettings.max_hours_week){
+      if (new_amount_of_week_work_hours > settings.max_hours_week){
         result.max_week_hours_limit_error = (
           'Você já tem {} horas nessa semana. O limite é de {} horas por semana'.format(
             current_amount_of_week_work_hours,
-            scheduleSettings.max_hours_week
+            settings.max_hours_week
           )
         );
         respond(null, result);
@@ -241,7 +264,7 @@ module.exports = function(options){
     end_of_month = new Date(year, month+1, 1);
     var current_amount_of_month_work_hours = 0
 
-    await list$(
+    await schedule_list$(
       {
         and$: [
           {start_time: {
@@ -251,9 +274,9 @@ module.exports = function(options){
           {profile_id: profile_id}
         ]
       })
-      .then(await function(list_of_schedukes){
+      .then(await function(list_of_schedules){
 
-        list_of_schedukes.forEach(function(time){
+        list_of_schedules.forEach(function(time){
           current_amount_of_month_work_hours = (
             current_amount_of_month_work_hours +
             get_schedule_duration(time.start_time, time.end_time)
@@ -264,11 +287,11 @@ module.exports = function(options){
           current_amount_of_month_work_hours +
           get_schedule_duration(start_time,end_time));
         // validates if the amount of hours in month is bigger than allowed
-        if (new_amount_of_month_work_hours > schedule_settings.max_hours_month){
+        if (new_amount_of_month_work_hours > settings.max_hours_month){
           result.max_hours_limit_error = (
             'Você já tem {} horas nesse mês. O limite é de {} horas por mês'.format(
               current_amount_of_month_work_hours,
-              scheduleSettings.max_hours_month
+              settings.max_hours_month
             )
           );
           result.success = false;
@@ -287,6 +310,10 @@ module.exports = function(options){
         console.log(result);
         respond(null, result);
       } else {
+        schedule.start_time = start_time
+        schedule.end_time = end_time
+        schedule.sector_id = sector_id
+        schedule.profile_id = profile_id
         schedule.save$(function(err,schedule){
           respond(null, schedule);
         })

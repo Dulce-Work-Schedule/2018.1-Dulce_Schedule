@@ -45,11 +45,12 @@ module.exports = function api(options){
         console.log(result.end_time_invalid_error);
       }
     }
+    console.log();
     // validate sector id
     if (sector_id == null || sector_id == "") {
       result.sector_id_error = 'O setor é obrigatório';
       console.log(result.sector_id_error);
-    } else if (checkObjectId.test(sector_id)) {
+    } else if ( ! checkObjectId.test(sector_id)) {
       result.invalid_sector_id_error = 'sector_id inválido'
     }
 
@@ -57,7 +58,7 @@ module.exports = function api(options){
     if (profile_id == null || profile_id == "") {
       result.profile_id_error = 'O usuário é obrigatório';
       console.log(result.profile_id_error);
-    } else if (checkObjectId.test(profile_id)) {
+    } else if ( ! checkObjectId.test(profile_id)) {
       result.invalid_profile_id_error = 'profile_id inválido'
     }
     // validade interval between start time and end time
