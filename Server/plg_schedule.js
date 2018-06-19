@@ -50,7 +50,7 @@ module.exports = function(options){
     var schedule_list$ = Promise.promisify(schedule.list$, { context: schedule });
     var settings_list$ = Promise.promisify(scheduleSettings.list$, { context: scheduleSettings });
 
-    var result = {};
+    var result = {success:false};
 
     var start_time = new Date(msg.start_time);
     var end_time = new Date(msg.end_time);
@@ -74,7 +74,6 @@ module.exports = function(options){
       })
       .catch(function(err){
         result.scheduleSettings_catch_error = "Não conseguiu achar schedule settings";
-        respond(null, result);
       })
 
 
@@ -86,39 +85,53 @@ module.exports = function(options){
           settings.min_hours_schedule
         )
       )
-      result.success = false;
-      respond(null, result)
     }
-
+    var start_interval = new Date(start_time)
+    var end_interval = new Date(end_time)
+    start_interval.setDate(start_interval.getDate()-1)
+    end_interval.setDate(end_interval.getDate()+1)
     // validates if any schedule conflict has occurred
     await schedule_list$(
     {
-      and$: [
-        {or$:[
-          {start_time: {
-            $gte: start_time,
-            $lt: end_time
-          }},
-          {end_time: {
-            $lte: end_time,
-            $gt: start_time
-          }}
-        ]},
-        {profile_id: profile_id},
-        {sector_id: sector_id}
-      ]
+      start_time: {
+        $gte: start_interval,
+        $lt: end_interval
+      },
+      profile_id: profile_id
     })
     .then(await function(list_of_schedules){
       if (list_of_schedules.length != 0){
-        result.conflicts_error = (
-          '{} já possui um horário de {} à {}'.format(
-            'Plantonista',
-            list_of_schedules[0].start_time,
-            list_of_schedules[0].end_time
-          )
-      );
-        result.success = false;
-        respond(null, result);
+        list_of_schedules.forEach(function(schedule_element){
+          if (start_time >= schedule_element.start_time  && start_time <= schedule_element.end_time){
+            // if start_time are in schedule_element interval, it gives an error
+            result.conflicts_error = (
+              '{} já possui um horário de {} à {}'.format(
+                'Plantonista',
+                schedule_element.start_time,
+                schedule_element.end_time
+              )
+            )
+          } else if (end_time >= schedule_element.start_time  && end_time <= schedule_element.end_time){
+            // if end_time are in schedule_element interval, it gives an error
+            result.conflicts_error = (
+              '{} já possui um horário de {} à {}'.format(
+                'Plantonista',
+                schedule_element.start_time,
+                schedule_element.end_time
+              )
+            )
+          } else if (start_time <= schedule_element.start_time  && end_time >= schedule_element.end_time){
+            //
+            result.conflicts_error = (
+              '{} já possui um horário de {} à {}'.format(
+                'Plantonista',
+                schedule_element.start_time,
+                schedule_element.end_time
+              )
+            )
+          }
+        });
+
       } else {
         // sucess
         // nothing to do
@@ -248,7 +261,6 @@ module.exports = function(options){
             settings.max_hours_week
           )
         );
-        respond(null, result);
       } else {
         // sucess!! nothing to do
       }
@@ -294,8 +306,6 @@ module.exports = function(options){
               settings.max_hours_month
             )
           );
-          result.success = false;
-          respond(null, result);
         } else {
           //success
           //nothing to do
@@ -305,7 +315,7 @@ module.exports = function(options){
         console.log(error);
       })
 
-      if(Object.entries(result)[0]){
+      if(Object.entries(result).length > 1){
         console.log('Alguns erros foram encontrados...');
         console.log(result);
         respond(null, result);
