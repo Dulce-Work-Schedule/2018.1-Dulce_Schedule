@@ -12,10 +12,13 @@ var milliseconds_in_one_hour = 3600000.0
 function get_schedule_duration( start_time, end_time){
   // The diference between Dates are given in milliseconds.
   // So we divide by the amount of milliseconds in 1 hour
+  console.log(start_time);
+  console.log(end_time);
   var duration = (
     (end_time - start_time) /
     milliseconds_in_one_hour
   );
+  console.log('Duração:{}'.format(duration));
   return duration;
 }
 
@@ -73,10 +76,8 @@ module.exports = function(options){
         }
       })
       .catch(function(err){
-        result.scheduleSettings_catch_error = "Não conseguiu achar schedule settings";
+        // result.scheduleSettings_catch_error = "Não conseguiu achar schedule settings";
       })
-
-
 
     // validates if the amount of minimum hours in a schedule is less than allowed
     if (get_schedule_duration(start_time, end_time) < scheduleSettings.min_hours_schedule){
@@ -102,7 +103,7 @@ module.exports = function(options){
     .then(await function(list_of_schedules){
       if (list_of_schedules.length != 0){
         list_of_schedules.forEach(function(schedule_element){
-          if (start_time >= schedule_element.start_time  && start_time <= schedule_element.end_time){
+          if (start_time >= schedule_element.start_time  && start_time < schedule_element.end_time){
             // if start_time are in schedule_element interval, it gives an error
             result.conflicts_error = (
               '{} já possui um horário de {} à {}'.format(
@@ -111,7 +112,7 @@ module.exports = function(options){
                 schedule_element.end_time
               )
             )
-          } else if (end_time >= schedule_element.start_time  && end_time <= schedule_element.end_time){
+          } else if (end_time > schedule_element.start_time  && end_time <= schedule_element.end_time){
             // if end_time are in schedule_element interval, it gives an error
             result.conflicts_error = (
               '{} já possui um horário de {} à {}'.format(
@@ -209,13 +210,13 @@ module.exports = function(options){
 
     // crates an interval of one week
     first_day_of_week = new Date(start_time.getFullYear(),
-                            start_time.getMonth(),
+                             start_time.getMonth(),
                             (start_time.getDate() -
-                            start_time.getDay()), 0, 0, 0);
+                             start_time.getDay()), 0, 0, 0);
     last_day_of_week = new Date(start_time.getFullYear(),
-                          start_time.getMonth(),
+                           start_time.getMonth(),
                           (start_time.getDate() -
-                          start_time.getDay() + 7), 0, 0, 0);
+                           start_time.getDay() + 7), 0, 0, 0);
 
     var current_amount_of_week_work_hours = 0;
 
@@ -248,16 +249,18 @@ module.exports = function(options){
           )
         )
       })
-
+      console.log("Horas trabalhadas na semana: {}".format(current_amount_of_week_work_hours))
       var new_amount_of_week_work_hours = (
         current_amount_of_week_work_hours +
         get_schedule_duration(start_time, end_time)
       );
+      console.log("Horas trabalhadas com o novo horário: {}".format(new_amount_of_week_work_hours))
+
       // validates if the amount of hours in a week is bigger than allowed
       if (new_amount_of_week_work_hours > settings.max_hours_week){
         result.max_week_hours_limit_error = (
           'Você já tem {} horas nessa semana. O limite é de {} horas por semana'.format(
-            current_amount_of_week_work_hours,
+            new_amount_of_week_work_hours,
             settings.max_hours_week
           )
         );
@@ -448,8 +451,10 @@ this.add('role:schedule,cmd:listYearByUser', function (msg, respond) {
     var scheduleSettings = this.make(schedule_settings_db)
     scheduleSettings.max_hours_month = parseInt(msg.max_hours_month)
     scheduleSettings.max_hours_week = parseInt(msg.max_hours_week)
+    scheduleSettings.max_hours_day = parseInt(msg.max_hours_day)
     scheduleSettings.min_hours_month = parseInt(msg.min_hours_month)
     scheduleSettings.min_hours_week = parseInt(msg.min_hours_week)
+    scheduleSettings.min_hours_schedule = parseInt(msg.min_hours_schedule)
     scheduleSettings.templates = msg.templates
 
     scheduleSettings.save$(function(err, scheduleSettings){
