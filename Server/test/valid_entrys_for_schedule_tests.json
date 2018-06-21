@@ -4,32 +4,32 @@ valid_schedule_settings = [
   	"max_hours_week": 40,
   	"min_hours_month": 50,
   	"min_hours_week": 8,
-  	"templates": [1,2,3]
-  },
-  {
-  	"max_hours_month": 150,
-  	"max_hours_week": 45,
-  	"min_hours_month": 50,
-  	"min_hours_week": 10,
-  	"templates": [1,2,3]
-  },
-  {
-  	"max_hours_month": 145,
-  	"max_hours_week": 50,
-  	"min_hours_month": 60,
-  	"min_hours_week": 11,
-  	"templates": [1,2,3, 4]
-  },
-  {
-  	"max_hours_month":"21",
-  	"max_hours_week":"11",
-  	"min_hours_month":"12",
-  	"min_hours_week":"12",
-  	"templates":[1,2,3]
+  	"templates": [1,2,3],
+  	"max_hours_day": "12",
+  	"min_hours_schedule": "3"
   }
 ]
 
 invalid_schedule_settings = [
+  {
+    "max_hours_month": ,
+    "max_hours_week": 11,
+    "min_hours_month": 12,
+    "min_hours_week": 12,
+    "templates": [1,2,3],
+    "max_hours_day": "12",
+    "min_hours_schedule": "3"
+  },
+  {
+    "max_hours_month": 10,
+    "max_hours_week": 11,
+    "min_hours_month": 12,
+    "min_hours_week": 12,
+    "templates": [1,2,3],
+    "max_hours_day": "12",
+    "min_hours_schedule": "3"
+  },
+
   {
   	"max_hours_month":"",
   	"max_hours_week":"11",
@@ -116,19 +116,19 @@ invalid_schedule = [
   {
     "start_time": "2018-09-09T22:01",
     "end_time": "",
-    "sector_id": "12",
-    "profile_id": "12"
+    "sector_id": "121212121212121212121212",
+    "profile_id": "121212121212121212121212"
   },
   {
     "start_time": "",
     "end_time": "2018-10-09T22:03",
-    "sector_id": "12",
-    "profile_id": "12"
+    "sector_id": "131313131313131313131313",
+    "profile_id": "131313131313131313131313"
   },
   {
     "start_time": "2018-09-09T22:01",
-    "sector_id": "12",
-    "profile_id": "12"
+    "sector_id": "131313131313131313131313",
+    "profile_id": "131313131313131313131313"
   },
   {
     "end_time": "2018-10-09T22:03",
@@ -163,7 +163,7 @@ valid_schedule = [
   {
     "start_time": "2018-09-09T20:00",
     "end_time": "2018-10-09T22:00",
-    "sector_id": "12",
-    "profile_id": "12"
+    "sector_id": "121212121212121212121212",
+    "profile_id": "131313131313131313131313"
   },
 ]

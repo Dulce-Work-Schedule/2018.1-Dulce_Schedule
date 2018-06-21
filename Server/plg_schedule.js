@@ -7,7 +7,6 @@ var schedule_settings_db = 'scheduleSettings'
 // 3600000.0 (1000ms * 60s * 60m), is the number of milliseconds in 1 hour.
 var milliseconds_in_one_hour = 3600000.0
 
-
 // get_schedule_duration returns schedule duration in hours
 function get_schedule_duration( start_time, end_time){
   // The diference between Dates are given in milliseconds.
@@ -353,31 +352,28 @@ module.exports = function(options){
 // #############################################################################
 
   this.add('role:schedule,cmd:listYearByProfile', function (msg, respond) {
-    console.log("Msg:")
     console.log(msg);
     var schedule = this.make(schedule_db);
     schedule.profile_id = msg.profile_id;
-    start_year = msg.start_year;
-    end_year = msg.end_year;
+    start_year = new Date(msg.start_year);
+    end_year = new Date(msg.end_year);
 
     schedule.list$(
       {
-        and$: [
-          {or$:[
-            {start_time: {
-              $gte: start_year,
-              $lt: end_year
-            }},
-            {end_time: {
-              $lte: end_year,
-              $gt: start_year
-            }}
-          ]},
-          {profile_id: schedule.profile_id},
-        ]
+        start_time: {
+          $gte: start_year,
+          $lt: end_year
+        },
+        profile_id: schedule.profile_id,
       },
       function(err,list){
-        console.log(list)
+        if (list.length > 0) {
+          console.log("Have list:");
+          console.log(list);
+          console.log("EnDHave list");
+        }else{
+          console.log("We DONT Have list:");
+        }
         respond (null, list)
     })
   })
@@ -391,24 +387,13 @@ this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
   start_year = msg.start_year;
   end_year = msg.end_year;
 
-  console.log("Start year:")
-  console.log(start_year)
-
   schedule.list$(
     {
-      and$: [
-        {or$:[
-          {start_time: {
-            $gte: start_year,
-            $lt: end_year
-          }},
-          {end_time: {
-            $lte: end_year,
-            $gt: start_year
-          }}
-        ]},
-        {sector_id: schedule.sector_id},
-      ]
+      start_time: {
+        $gte: start_year,
+        $lt: end_year
+      },
+      sector_id: schedule.sector_id,
     },
     function(err,list){
       respond (null, list)

@@ -4,13 +4,41 @@ currentWeekNumber = require('current-week-number');
 // The RegExp Object above validates MongoBD ObjectIds
 var checkObjectId = new RegExp('^[0-9a-fA-F]{24}$');
 
-function IsJsonString(str) {
-    try {
-        JSON.parse(str);
-    } catch (e) {
-        return false;
+var milliseconds_in_one_hour = 3600000.0
+
+// Alternative python string.format() for javascript
+// First, checks if it isn't implemented yet.
+if (!String.prototype.format) {
+  String.prototype.format = function(){
+    var args = arguments;
+    var replaceable_count = (this.match(/{}/g) || []).length;
+    if(args.length < replaceable_count){
+      console.log(
+        "Expecting " + replaceable_count + "arguments, " +
+        args.length + 'found.');
+      return this
+    }else{
+      var new_string = this;
+      for (i=0; i < replaceable_count; i++){
+        new_string = new_string.replace('{}', args[i]);
+      }
+      return new_string
     }
-    return true;
+  };
+}
+
+// get_schedule_duration returns schedule duration in hours
+function get_schedule_duration( start_time, end_time){
+  // The diference between Dates are given in milliseconds.
+  // So we divide by the amount of milliseconds in 1 hour
+  console.log(start_time);
+  console.log(end_time);
+  var duration = (
+    (end_time - start_time) /
+    milliseconds_in_one_hour
+  );
+  console.log('Duração:{}'.format(duration));
+  return duration;
 }
 
 function api(options){
@@ -21,9 +49,7 @@ function api(options){
     var result = {};
 
     // check if body is empty.
-    if (IsNotValidJson(msg.args.body)){
-      result.body_error = 'Erro de Sintaxe no body da requisição';
-    } else if (msg.args.body == {}){
+    if (msg.args.body == {}){
       result.body_error = 'Nenhum parametro informado';
       respond(null, result);
     }
