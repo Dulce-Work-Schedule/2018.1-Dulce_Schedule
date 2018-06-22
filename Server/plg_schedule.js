@@ -378,27 +378,49 @@ module.exports = function(options){
     })
   })
 
-// #############################################################################
+  // #############################################################################
 
-this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
-  console.log(msg);
-  var schedule = this.make(schedule_db);
-  schedule.sector_id = msg.sector_id;
-  start_year = msg.start_year;
-  end_year = msg.end_year;
+  this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
+    console.log(msg);
+    var schedule = this.make(schedule_db);
+    schedule.sector_id = msg.sector_id;
+    start_year = new Date(msg.start_year);
+    end_year = new Date(msg.end_year);
 
-  schedule.list$(
-    {
-      start_time: {
-        $gte: start_year,
-        $lt: end_year
-      },
-      sector_id: schedule.sector_id,
-    },
-    function(err,list){
-      respond (null, list)
-  })
-})
+    schedule.list$(
+      {
+        start_time: {
+          $gte: start_year,
+          $lt: end_year
+        },
+        sector_id: schedule.sector_id,
+      }, function(err, sector_schedules){
+        respond (null, sector_schedules)
+    });
+  });
+
+  // #############################################################################
+
+  this.add('role:schedule,cmd:changeListYearBySector', function (msg, respond) {
+    console.log(msg);
+    var schedule = this.make(schedule_db);
+    sector_id = msg.sector_id;
+    profile_id = msg.profile_id;
+    start_year = new Date(msg.start_year);
+    end_year = new Date(msg.end_year);
+
+    schedule.list$(
+      {
+        start_time: {
+          $gte: start_year,
+          $lt: end_year
+        },
+        sector_id: sector_id,
+        profile_id:{$not:{$eq:profile_id}}
+      }, function(err, sector_schedules){
+        respond (null, sector_schedules)
+    });
+  });
 
 // #############################################################################
 
@@ -445,6 +467,35 @@ this.add('role:schedule,cmd:listYearByUser', function (msg, respond) {
     scheduleSettings.save$(function(err, scheduleSettings){
       respond(null, scheduleSettings)
     })
+  })
+
+  // #############################################################################
+
+  this.add('role:schedule, cmd:delete', async function (msg, respond) {
+      var schedule = this.make(schedule_db);
+      var schedule_id = msg.schedule_id;
+      result = {}
+
+      console.log("excluir:" + schedule_id);
+
+      var remove$ = Promise.promisify(schedule.remove$, { context: schedule });
+
+      await remove$({id: schedule_id})
+      .then(function(deleted_schedule){
+        if (deleted_schedule != null){
+          deleted_schedule.sucess = true;
+          respond(null, deleted_schedule);
+        }else{
+          result.sucess = false;
+          result.schedule_not_find = "Horário não encontrado";
+          respond(null, result);
+        }
+      })
+      .catch(function(error){
+        result.sucess = false;
+        result.remove_error = "Erro ao remover horário";
+        respond(null, result);
+      })
   })
 
 // #############################################################################

@@ -26,7 +26,6 @@ describe('Create schedule', function() {
       sector_id: "121212121212121212121212",
       profile_id: "131313131313131313131313",
     }, function(err, result){
-      console.log(result);
       expect(result.sector_id).to.equal("121212121212121212121212")
       expect(result.profile_id).to.equal('131313131313131313131313')
       expect(result.start_time).to.eql(new Date('2018-09-09T20:00'))
@@ -50,7 +49,6 @@ describe('Create schedule settings', function() {
     	min_hours_week: 10,
     	templates: [1,2]
     }, function(err, result){
-      console.log(result);
       expect(result.max_hours_month).to.equal(150)
       expect(result.max_hours_week).to.equal(45)
       expect(result.min_hours_month).to.equal(50)
@@ -71,7 +69,6 @@ describe('Create schedule settings', function() {
       min_hours_week: "10",
       templates: [1,2]
     }, function(err, result){
-      console.log(result);
       expect(result.max_hours_month).to.equal(150)
       expect(result.max_hours_week).to.equal(45)
       expect(result.min_hours_month).to.equal(50)
@@ -99,7 +96,6 @@ describe('List schedules by profile', function() {
         cmd: "listByProfile",
         id: "131313131313131313131313",
       }, function(err, result) {
-        console.log("Result:")
         expect(result[0].sector_id).to.equal('121212121212121212121212')
         expect(result[0].profile_id).to.equal('131313131313131313131313')
         expect(result[0].start_time).to.eql(new Date('2018-09-09T19:00'))
