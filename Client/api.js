@@ -323,6 +323,32 @@ function api(options){
 
 //#############################################################################
 
+  this.add('role:api,path:changeListYearBySector', function (msg, respond) {
+    console.log(msg.args)
+    var currentDate = new Date();
+    var year = msg.args.query.year;
+    if (year == undefined || year == "Invalid Date") {
+        year = currentDate.getFullYear();
+    }
+    year = parseInt(year);
+    start_year= new Date(year, 0, 1);
+    end_year= new Date((year+1), 0, 1);
+
+    console.log("Start" + start_year)
+    console.log("End" + end_year)
+
+    var sector_id = msg.args.query.sector_id;
+    var profile_id = msg.args.query.profile_id;
+    this.act('role:schedule,cmd:changeListYearBySector', {
+        start_year:start_year,
+        end_year:end_year,
+        sector_id:sector_id,
+        profile_id:profile_id
+    }, respond)
+  });
+
+//#############################################################################
+
   this.add('role:api,path:listYearByUser', function (msg, respond) {
     console.log(msg.args)
     var currentDate = new Date();
@@ -389,6 +415,9 @@ function api(options){
             GET: true
           },
           listYearBySector: {
+            GET: true
+          },
+          changeListYearBySector: {
             GET: true
           },
           listYearByUser: {

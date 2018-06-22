@@ -378,26 +378,49 @@ module.exports = function(options){
     })
   })
 
-// #############################################################################
+  // #############################################################################
 
-this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
-  console.log(msg);
-  var schedule = this.make(schedule_db);
-  schedule.sector_id = msg.sector_id;
-  start_year = new Date(msg.start_year);
-  end_year = new Date(msg.end_year);
+  this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
+    console.log(msg);
+    var schedule = this.make(schedule_db);
+    schedule.sector_id = msg.sector_id;
+    start_year = new Date(msg.start_year);
+    end_year = new Date(msg.end_year);
 
-  schedule.list$(
-    {
-      start_time: {
-        $gte: start_year,
-        $lt: end_year
-      },
-      sector_id: schedule.sector_id,
-    }, function(err, sector_schedules){
-      respond (null, sector_schedules)
+    schedule.list$(
+      {
+        start_time: {
+          $gte: start_year,
+          $lt: end_year
+        },
+        sector_id: schedule.sector_id,
+      }, function(err, sector_schedules){
+        respond (null, sector_schedules)
+    });
   });
-});
+
+  // #############################################################################
+
+  this.add('role:schedule,cmd:changeListYearBySector', function (msg, respond) {
+    console.log(msg);
+    var schedule = this.make(schedule_db);
+    sector_id = msg.sector_id;
+    profile_id = msg.profile_id;
+    start_year = new Date(msg.start_year);
+    end_year = new Date(msg.end_year);
+
+    schedule.list$(
+      {
+        start_time: {
+          $gte: start_year,
+          $lt: end_year
+        },
+        sector_id: sector_id,
+        profile_id:{$not:{$eq:profile_id}}
+      }, function(err, sector_schedules){
+        respond (null, sector_schedules)
+    });
+  });
 
 // #############################################################################
 
