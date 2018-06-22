@@ -447,6 +447,29 @@ this.add('role:schedule,cmd:listYearByUser', function (msg, respond) {
     })
   })
 
+  // #############################################################################
+
+  this.add('role:schedule, cmd:delete', async function (msg, respond) {
+      var schedule = this.make(schedule_db);
+      var schedule_id = msg.schedule_id;
+      result = {}
+
+      console.log("excluir:" + schedule_id);
+
+      var remove$ = Promise.promisify(schedule.remove$, { context: schedule });
+
+      await remove$({id: schedule_id})
+      .then(function(result){
+        result.sucess = "true";
+        respond(null, result);
+      })
+      .catch(function(error){
+        result.sucess = "false";
+        result.schedule_not_find = "Horário não encontrado";
+        respond(null, result);
+      })
+  })
+
 // #############################################################################
 
   this.add('role:schedule, cmd:error', function error(msg, respond) {

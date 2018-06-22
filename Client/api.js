@@ -351,6 +351,16 @@ function api(options){
 
 //#############################################################################
 
+  this.add('role:api,path:delete', function (msg, respond) {
+    var schedule_id = msg.args.query.schedule_id;
+
+    this.act('role:schedule,cmd:delete', {
+        schedule_id:schedule_id
+    }, respond)
+  });
+
+//#############################################################################
+
   this.add('role:api,path:error', function(msg, respond){
       this.act('role:schedule, cmd:error',{}, respond)
   });
@@ -377,6 +387,9 @@ function api(options){
           },
           listYearByUser: {
             GET: true
+          },
+          delete: {
+            DELETE: true
           },
           //  listSectorWeek: { GET: true,
           //    auth: {
