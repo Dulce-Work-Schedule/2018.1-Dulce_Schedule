@@ -33,37 +33,6 @@ describe('Create schedule', function() {
       fin()
     })
   })
-
-  it('Schedule entity deletion', function(fin){
-    var seneca = test_schedule_seneca(fin)
-
-    seneca.act({
-      role: "schedule",
-      cmd: "createSchedule",
-      start_time: "2018-09-09T20:00",
-      end_time: "2018-09-09T22:00",
-      sector_id: "121212121212121212121212",
-      profile_id: "131313131313131313131313",
-    }, function(err, result){
-      console.log("aqui aqui");
-      console.log("result"+result);
-      console.log("id"+result.id);
-      seneca.act({
-        role: "schedule",
-        cmd: "delete",
-        schedule_id: result.id
-      }, function(err, result){
-        console.log(result);
-        // expect(result.start_time).to.eql(new Date('2018-09-09T20:00'))
-        // expect(result.end_time).to.eql(new Date('2018-09-09T22:00'))
-        // expect(result.sector_id).to.equal("121212121212121212121212")
-        // expect(result.profile_id).to.equal('131313131313131313131313')
-        expect(result.schedule_not_find).to.equal("Horário não encontrado")
-        expect(result.sucess).to.equal('true')
-        fin()
-      })
-    })
-  })
 });
 
 describe('Create schedule settings', function() {

@@ -459,13 +459,19 @@ this.add('role:schedule,cmd:listYearByUser', function (msg, respond) {
       var remove$ = Promise.promisify(schedule.remove$, { context: schedule });
 
       await remove$({id: schedule_id})
-      .then(function(result){
-        result.sucess = "true";
-        respond(null, result);
+      .then(function(deleted_schedule){
+        if (deleted_schedule != null){
+          deleted_schedule.sucess = true;
+          respond(null, deleted_schedule);
+        }else{
+          result.sucess = false;
+          result.schedule_not_find = "Horário não encontrado";
+          respond(null, result);
+        }
       })
       .catch(function(error){
-        result.sucess = "false";
-        result.schedule_not_find = "Horário não encontrado";
+        result.sucess = false;
+        result.remove_error = "Erro ao remover horário";
         respond(null, result);
       })
   })
