@@ -384,8 +384,8 @@ this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
   console.log(msg);
   var schedule = this.make(schedule_db);
   schedule.sector_id = msg.sector_id;
-  start_year = msg.start_year;
-  end_year = msg.end_year;
+  start_year = new Date(msg.start_year);
+  end_year = new Date(msg.end_year);
 
   schedule.list$(
     {
@@ -394,11 +394,10 @@ this.add('role:schedule,cmd:listYearBySector', function (msg, respond) {
         $lt: end_year
       },
       sector_id: schedule.sector_id,
-    },
-    function(err,list){
-      respond (null, list)
-  })
-})
+    }, function(err, sector_schedules){
+      respond (null, sector_schedules)
+  });
+});
 
 // #############################################################################
 

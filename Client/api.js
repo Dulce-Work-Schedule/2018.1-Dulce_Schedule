@@ -2,25 +2,26 @@
 currentWeekNumber = require('current-week-number');
 
 // The RegExp Object above validates MongoBD ObjectIds
-var checkObjectId = new RegExp('^[0-9a-fA-F]{24}$');
-
+function IsInvalidObjectId(objectIdString){
+  var checkObjectId = new RegExp('^[0-9a-fA-F]{24}$');
+  return (! checkObjectId.test(objectIdString))
+}
 var milliseconds_in_one_hour = 3600000.0
 
 // Alternative python string.format() for javascript
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
   String.prototype.format = function(){
-    var args = arguments;
     var replaceable_count = (this.match(/{}/g) || []).length;
-    if(args.length < replaceable_count){
+    if(arguments.length < replaceable_count){
       console.log(
         "Expecting " + replaceable_count + "arguments, " +
-        args.length + 'found.');
+        arguments.length + 'found.');
       return this
     }else{
       var new_string = this;
       for (i=0; i < replaceable_count; i++){
-        new_string = new_string.replace('{}', args[i]);
+        new_string = new_string.replace('{}', arguments[i]);
       }
       return new_string
     }
@@ -86,7 +87,7 @@ function api(options){
     if (sector_id == null || sector_id == "") {
       result.sector_id_error = 'O setor é obrigatório';
       console.log(result.sector_id_error);
-    } else if ( ! checkObjectId.test(sector_id)) {
+    } else if (IsInvalidObjectId(sector_id)) {
       result.invalid_sector_id_error = 'sector_id inválido'
     }
 
@@ -94,7 +95,7 @@ function api(options){
     if (profile_id == null || profile_id == "") {
       result.profile_id_error = 'O usuário é obrigatório';
       console.log(result.profile_id_error);
-    } else if ( ! checkObjectId.test(profile_id)) {
+    } else if (IsInvalidObjectId(profile_id)) {
       result.invalid_profile_id_error = 'profile_id inválido'
     }
     // validade interval between start time and end time
@@ -270,25 +271,30 @@ function api(options){
 //#############################################################################
 
   this.add('role:api,path:listYearByProfile', function (msg, respond) {
-      console.log(msg.args)
-      var currentDate = new Date();
-      var year = msg.args.query.year;
-      if (year == undefined || year == "Invalid Date") {
-          year = currentDate.getFullYear();
-      }
-      year = parseInt(year);
-      start_year= new Date(year, 0, 1);
-      end_year= new Date((year+1), 0, 1);
-
-      console.log("Start" + start_year);
-      console.log("End" + end_year);
-
       var profile_id = msg.args.query.profile_id;
-      this.act('role:schedule,cmd:listYearByProfile', {
-          start_year:start_year,
-          end_year:end_year,
-          profile_id:profile_id
-      }, respond)
+      result = {success:false};
+      if(IsInvalidObjectId(profile_id)){
+        result.invalid_profile_id_error = "Perfil inválido"
+        respond(null, result);
+      }else{
+        var currentDate = new Date();
+        var year = parseInt(msg.args.query.year);
+        if (isNaN(year) == true) {
+            year = currentDate.getFullYear();
+        }else{
+          // Nothing to do
+        }
+        start_year = new Date(year, 0, 1);
+        end_year = new Date((year+1), 0, 1);
+
+        console.log("Start" + start_year);
+        console.log("End" + end_year);
+        this.act('role:schedule,cmd:listYearByProfile', {
+            start_year:start_year,
+            end_year:end_year,
+            profile_id:profile_id
+        }, respond)
+      }
   });
 
 //#############################################################################
