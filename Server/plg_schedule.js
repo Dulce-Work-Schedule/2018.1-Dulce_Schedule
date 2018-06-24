@@ -61,7 +61,7 @@ module.exports = function(options){
     var schedule_list$ = Promise.promisify(schedule.list$, { context: schedule });
     var settings_list$ = Promise.promisify(scheduleSettings.list$, { context: scheduleSettings });
 
-    var result = {success:false};
+    var result = {};
 
     var start_time = new Date(msg.start_time);
     var end_time = new Date(msg.end_time);
@@ -319,7 +319,8 @@ module.exports = function(options){
         console.log(error);
       })
 
-      if(Object.entries(result).length > 1){
+      if(Object.entries(result).length > 0){
+        result.success = false;
         console.log('Alguns erros foram encontrados...');
         console.log(result);
         respond(null, result);
@@ -486,19 +487,21 @@ this.add('role:schedule,cmd:listByUser', function (msg, respond) {
     console.log(msg);
 
     var edited_schedule = {};
-    var result = {success:false};
+    var current_schedule = {};
+    var result = {};
 
     await load$(schedule_id)
-    .then(function(current_schedule){
-      if (current_schedule == null){
+    .then(function(schedule){
+      if (schedule == null){
         console.log("if");
-        console.log(current_schedule);
+        console.log(schedule);
         result.schedule_not_find = "Horário não encontrado";
         respond(null, result);
       }else{
         console.log("else");
-        console.log(current_schedule);
-        edited_schedule = current_schedule
+        console.log(schedule);
+        edited_schedule = schedule
+        current_schedule = schedule
       }
     })
     .catch(function(error){
@@ -686,34 +689,26 @@ this.add('role:schedule,cmd:listByUser', function (msg, respond) {
     })
 
     // crates an interval of one week
-    first_day_of_week = new Date(edited_schedule.start_time.getFullYear(),
-                             edited_schedule.start_time.getMonth(),
-                            (edited_schedule.start_time.getDate() -
-                             edited_schedule.start_time.getDay()), 0, 0, 0);
-    last_day_of_week = new Date(edited_schedule.start_time.getFullYear(),
-                           edited_schedule.start_time.getMonth(),
-                          (edited_schedule.start_time.getDate() -
-                           edited_schedule.start_time.getDay() + 7), 0, 0, 0);
+    first_day_of_week = new Date(current_schedule.start_time.getFullYear(),
+                             current_schedule.start_time.getMonth(),
+                            (current_schedule.start_time.getDate() -
+                             current_schedule.start_time.getDay()), 0, 0, 0);
+    last_day_of_week = new Date(current_schedule.start_time.getFullYear(),
+                           current_schedule.start_time.getMonth(),
+                          (current_schedule.start_time.getDate() -
+                           current_schedule.start_time.getDay() + 7), 0, 0, 0);
 
     var current_amount_of_week_work_hours = 0;
 
     // lists every schedule in a one week interval
     await schedule_list$(
     {
-      and$: [
-        {or$:[
-          {start_time: {
-            $gte: first_day_of_week,
-            $lt: last_day_of_week,
-            $not:{$eq:edited_schedule.start_time}
-          }},
-          {end_time: {
-            $lte: last_day_of_week,
-            $gte: first_day_of_week
-          }}
-        ]},
-        {profile_id: edited_schedule.profile_id}
-      ]
+      start_time: {
+        $gte: first_day_of_week,
+        $lt: last_day_of_week,
+        $not:{$eq:current_schedule.start_time}
+      },
+      profile_id: edited_schedule.profile_id
     })
     .then(await function(list_of_schedules){
       // Walks on the schedules list and count the amount of hours
@@ -727,19 +722,43 @@ this.add('role:schedule,cmd:listByUser', function (msg, respond) {
           )
         )
       })
-      console.log("Horas trabalhadas na semana: {}".format(current_amount_of_week_work_hours))
+
       var new_amount_of_week_work_hours = (
-        current_amount_of_week_work_hours +
-        get_schedule_duration(edited_schedule.start_time, edited_schedule.end_time)
+        current_amount_of_week_work_hours
       );
+      var is_greater_than_sunday = first_day_of_week.getDate() < edited_schedule.start_time.getDate()
+      var is_lower_than_saturday = last_day_of_week.getDate() > edited_schedule.start_time.getDate()
+      if(is_greater_than_sunday && is_lower_than_saturday){
+        new_amount_of_week_work_hours = (
+          new_amount_of_week_work_hours +
+          get_schedule_duration(
+            edited_schedule.start_time,
+            edited_schedule.end_time
+          )
+        )
+        if (new_amount_of_week_work_hours > settings.max_hours_week){
+          result.max_week_hours_limit_error = (
+            'Você já tem {} horas nessa semana. O limite é de {} horas por semana'.format(
+              new_amount_of_week_work_hours,
+              settings.max_hours_week
+            )
+          );
+        } else {
+          // sucess!! nothing to do
+        }
+      }else {
+        // Do nothing
+      }
+      console.log("Horas trabalhadas na semana: {}".format(current_amount_of_week_work_hours))
       console.log("Horas trabalhadas com o novo horário: {}".format(new_amount_of_week_work_hours))
 
+
       // validates if the amount of hours in a week is bigger than allowed
-      if (new_amount_of_week_work_hours > settings.max_hours_week){
-        result.max_week_hours_limit_error = (
-          'Você já tem {} horas nessa semana. O limite é de {} horas por semana'.format(
-            new_amount_of_week_work_hours,
-            settings.max_hours_week
+      if (new_amount_of_week_work_hours < settings.min_hours_week){
+        result.min_week_hours_limit_error = (
+          'O limite mínimo de horas por semana é de {}. Você possui apenas {} horas nessa semana'.format(
+            settings.min_hours_week,
+            new_amount_of_week_work_hours
           )
         );
       } else {
@@ -800,12 +819,17 @@ this.add('role:schedule,cmd:listByUser', function (msg, respond) {
         console.log(error);
       })
 
-      if(Object.entries(result).length > 1){
+      if(Object.entries(result).length > 0){
+        result.success = false;
         console.log('Alguns erros foram encontrados...');
         console.log(result);
         respond(null, result);
       } else {
-        edited_schedule.save$(function(err,schedule){
+        schedule.start_time = edited_schedule.start_time
+        schedule.end_time = edited_schedule.end_time
+        schedule.sector_id = edited_schedule.sector_id
+        schedule.profile_id = edited_schedule.profile_id
+        schedule.save$(function(err,schedule){
           respond(null, schedule);
         })
       }
