@@ -9,8 +9,8 @@
     "max_hours_week": 50,
     "min_hours_month": 60,
     "min_hours_week": 11,
-    "min_hours_schedule": 2,
-    "max_hours_day": 6,
+    "min_hours_schedule": 1,
+    "max_hours_day": 24,
     "templates": [1,2,3, 4]
   };
   // 3600000.0 (1000ms * 60s * 60m), is the number of milliseconds in 1 hour.

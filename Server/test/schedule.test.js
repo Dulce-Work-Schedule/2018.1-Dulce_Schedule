@@ -20,7 +20,7 @@ describe('Create schedule', function() {
 
     seneca.act({
       role: "schedule",
-      cmd: "createSchedule",
+      cmd: "create",
       start_time: "2018-09-09T20:00",
       end_time: "2018-09-09T22:00",
       sector_id: "121212121212121212121212",
@@ -42,7 +42,7 @@ describe('Create schedule settings', function() {
 
     seneca.act({
       role: "schedule",
-      cmd: "createScheduleSettings",
+      cmd: "createSettings",
       max_hours_month: 150,
     	max_hours_week: 45,
     	min_hours_month: 50,
@@ -62,7 +62,7 @@ describe('Create schedule settings', function() {
 
     seneca.act({
       role: "schedule",
-      cmd: "createScheduleSettings",
+      cmd: "createSettings",
       max_hours_month: "150",
       max_hours_week: "45",
       min_hours_month: "50",
@@ -85,7 +85,7 @@ describe('List schedules by profile', function() {
 
     seneca.act({
       role: "schedule",
-      cmd: "createSchedule",
+      cmd: "create",
       start_time: "2018-09-09T19:00",
       end_time: "2018-09-09T23:00",
       sector_id: "121212121212121212121212",
@@ -121,7 +121,7 @@ describe('List schedules by profile', function() {
 //
 //     seneca.act({
 //       role: "schedule",
-//       cmd: "createSchedule",
+//       cmd: "create",
 //       start_time: "2018-09-09T19:00",
 //       end_time: "2018-09-09T23:00",
 //       sector_id: "121212121212121212121212",
@@ -166,7 +166,7 @@ describe('List schedules by profile', function() {
 //
 //     seneca.act({
 //       role: "schedule",
-//       cmd: "createSchedule",
+//       cmd: "create",
 //       start_time: start_time,
 //       end_time: end_time,
 //       sector_id: sector_id,
