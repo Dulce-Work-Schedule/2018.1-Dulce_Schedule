@@ -519,9 +519,6 @@ function api(options){
           edit: {
             PUT: true
           },
-          listByProfile: {
-            GET: true
-          },
           delete: {
             DELETE: true
           },
