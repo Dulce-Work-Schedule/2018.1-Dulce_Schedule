@@ -1,11 +1,33 @@
 
 currentWeekNumber = require('current-week-number');
 
+
 // The RegExp Object above validates MongoBD ObjectIds
 function IsInvalidObjectId(objectIdString){
   var checkObjectId = new RegExp('^[0-9a-fA-F]{24}$');
   return (! checkObjectId.test(objectIdString))
 }
+
+function validate_date(date_field, result){
+  date = new Date(date_field.value);
+  today = new Date();
+  if (date == "Invalid Date") {
+    result[date_field.field_name + '_error'] = date_field.verbose + ' inválido';
+  } else if (date < today){
+    result[date_field.field_name + '_error'] = 'Você não pode inserir um ' + date_field.verbose + ' que já passou';
+  }
+  return result;
+};
+
+function validate_id(field, result){
+  if (field.value == null || field.value == ''){
+    result[field.field_name + '_error'] = 'O campo ' + field.verbose + ' é obrigatório.';
+  } else if (IsInvalidObjectId(field.value)) {
+    result[field.field_name + '_error'] = 'O ' + field.verbose +' é inválido.';
+  }
+  return result;
+};
+
 var milliseconds_in_one_hour = 3600000.0
 
 // Alternative python string.format() for javascript
@@ -20,7 +42,7 @@ if (!String.prototype.format) {
       return this
     }else{
       var new_string = this;
-      for (i=0; i < replaceable_count; i++){
+      for (i = 0; i < replaceable_count; i++){
         new_string = new_string.replace('{}', arguments[i]);
       }
       return new_string
@@ -45,7 +67,7 @@ function get_schedule_duration( start_time, end_time){
 function api(options){
 
 //#############################################################################
-  this.add('role:api,path:createSchedule', function(msg, respond){
+  this.add('role:api,path:create', function(msg, respond){
     // result variable store attribute errors or the success created schedule
     var result = {};
 
@@ -115,14 +137,14 @@ function api(options){
 
 
     // verify that an error has occurred
-    if (Object.entries(result)[0]) {
+    if (Object.entries(result).length > 0) {
       console.log("Result:");
       console.log(result);
       result.success = false;
       respond(null, result)
-    // else, everything sucess
+    // else, everything success
     } else {
-      this.act('role:schedule,cmd:createSchedule',{
+      this.act('role:schedule,cmd:create',{
         start_time: start_time,
         end_time: end_time,
         sector_id: sector_id,
@@ -132,7 +154,7 @@ function api(options){
   });
 
 //#############################################################################
-  this.add('role:api,path:createScheduleSettings', function(msg, respond){
+  this.add('role:api,path:createSettings', function(msg, respond){
     var max_hours_month = parseInt(msg.args.body.max_hours_month)
     var max_hours_week = parseInt(msg.args.body.max_hours_week)
     var min_hours_month = parseInt(msg.args.body.min_hours_month)
@@ -142,7 +164,7 @@ function api(options){
     // Lista de ids de templates
     var templates = msg.args.body.templates
 
-    result = {}
+    var result = {}
     // validar se ids de templates são validos
 
     // 24*7 = 168
@@ -250,13 +272,13 @@ function api(options){
       result.hours_day_interval_invalid_error = 'O máximo de horas por dia deve ser maior que o mínimo de horas da escala';
       console.log(result.hours_week_interval_invalid_error);
     }
-    if (Object.entries(result)[0]) {
+    if (Object.entries(result).length > 0) {
       console.log("Result:");
       console.log(result);
       result.success = false;
       respond(null, result)
     } else {
-      this.act('role:schedule,cmd:createScheduleSettings',{
+      this.act('role:schedule,cmd:createSettings',{
         max_hours_month:max_hours_month,
         max_hours_week:max_hours_week,
         min_hours_month:min_hours_month,
@@ -270,7 +292,7 @@ function api(options){
 
 //#############################################################################
 
-  this.add('role:api,path:listYearByProfile', function (msg, respond) {
+  this.add('role:api,path:listByProfile', function (msg, respond) {
       var profile_id = msg.args.query.profile_id;
       result = {success:false};
       if(IsInvalidObjectId(profile_id)){
@@ -289,7 +311,7 @@ function api(options){
 
         console.log("Start" + start_year);
         console.log("End" + end_year);
-        this.act('role:schedule,cmd:listYearByProfile', {
+        this.act('role:schedule,cmd:listByProfile', {
             start_year:start_year,
             end_year:end_year,
             profile_id:profile_id
@@ -299,7 +321,7 @@ function api(options){
 
 //#############################################################################
 
-  this.add('role:api,path:listYearBySector', function (msg, respond) {
+  this.add('role:api,path:listBySector', function (msg, respond) {
     console.log(msg.args)
     var currentDate = new Date();
     var year = msg.args.query.year;
@@ -314,7 +336,7 @@ function api(options){
     console.log("End" + end_year)
 
     var sector_id = msg.args.query.sector_id;
-    this.act('role:schedule,cmd:listYearBySector', {
+    this.act('role:schedule,cmd:listBySector', {
         start_year:start_year,
         end_year:end_year,
         sector_id:sector_id
@@ -323,7 +345,7 @@ function api(options){
 
 //#############################################################################
 
-  this.add('role:api,path:changeListYearBySector', function (msg, respond) {
+  this.add('role:api,path:changeListBySector', function (msg, respond) {
     console.log(msg.args)
     var currentDate = new Date();
     var year = msg.args.query.year;
@@ -339,7 +361,7 @@ function api(options){
 
     var sector_id = msg.args.query.sector_id;
     var profile_id = msg.args.query.profile_id;
-    this.act('role:schedule,cmd:changeListYearBySector', {
+    this.act('role:schedule,cmd:changeListBySector', {
         start_year:start_year,
         end_year:end_year,
         sector_id:sector_id,
@@ -349,7 +371,7 @@ function api(options){
 
 //#############################################################################
 
-  this.add('role:api,path:listYearByUser', function (msg, respond) {
+  this.add('role:api,path:listByUser', function (msg, respond) {
     console.log(msg.args)
     var currentDate = new Date();
     var year = msg.args.query.year;
@@ -364,7 +386,7 @@ function api(options){
     console.log("End" + end_year)
 
     var user_id = msg.args.query.user_id;
-    this.act('role:schedule,cmd:listYearByUser', {
+    this.act('role:schedule,cmd:listByUser', {
         start_year:start_year,
         end_year:end_year,
         user_id:user_id
@@ -372,13 +394,87 @@ function api(options){
   });
 
 //#############################################################################
+  this.add('role:api,path:edit', function(msg, respond){
+    // result variable store attribute errors or the success created schedule
+    var result = {};
+    // check if body is empty.
+    if (msg.args.body == {}){
+      result.body_error = 'Nenhum parametro informado';
+      respond(null, result);
+    } else {
+      // Do nothing
+    }
 
-  this.add('role:api,path:listByProfile', function (msg, respond) {
-    var id = msg.args.query.id
-    console.log("id informado:" + id);
-    this.act('role:schedule, cmd:listByProfile', {
-      id:id
-    }, respond)
+    // variables
+    var schedule_id = {
+      verbose: 'ID do Horário',
+      field_name: 'schedule_id'
+    };
+    var start_time = {
+      verbose: 'Horário de início',
+      field_name: 'start_time'
+    };
+    var end_time = {
+      verbose: 'Horário de término',
+      field_name: 'end_time'
+    };
+
+    schedule_id.value = msg.args.body.schedule_id;
+    start_time.value = msg.args.body.start_time;
+    end_time.value = msg.args.body.end_time;
+
+    console.log("Client MSG");
+    console.log(msg.args.body);
+
+    result = validate_id(schedule_id, result);
+
+    console.log("Client 1 ");
+    console.log(result);
+    console.log("Horáio 1 ");
+    console.log(schedule_id);
+
+    var new_start_time = null;
+    var new_end_time = null;
+
+    // validate start time
+    if (start_time.value != null) {
+      result = validate_date(start_time, result)
+      new_start_time = new Date(start_time.value)
+      console.log("Client 2 ");
+      console.log(result);
+      console.log("Date 1 ");
+      console.log(new_start_time);
+    } else {
+      // All Good, do Nothing
+    }
+    // validate end time
+    if (end_time.value != null) {
+      result = validate_date(end_time, result)
+      new_end_time = new Date(end_time.value)
+      console.log("Date 2 ");
+      console.log(new_end_time);
+    } else {
+      // All Good, do Nothing
+    }
+
+    if (new_start_time == null && new_end_time == null){
+      result.no_change_error = "Nenhuma mudança detectada"
+    }
+
+    // verify that an error has occurred
+    if (Object.entries(result).length > 0) {
+      console.log("Result:");
+      console.log(result);
+      result.success = false;
+      respond(null, result)
+    // else, everything success
+    } else {
+      this.act('role:schedule,cmd:edit',{
+        start_time: new_start_time,
+        end_time: new_end_time,
+        schedule_id : schedule_id.value
+      }, respond)
+    }
   });
 
 //#############################################################################
@@ -405,34 +501,28 @@ function api(options){
         prefix: '/api/schedule',
         pin: 'role:api,path:*',
         map: {
-          createSchedule: {
+          create: {
             POST: true
           },
           listByProfile: {
             GET: true
           },
-          listYearByProfile: {
+          listBySector: {
             GET: true
           },
-          listYearBySector: {
+          changeListBySector: {
             GET: true
           },
-          changeListYearBySector: {
+          listByUser: {
             GET: true
           },
-          listYearByUser: {
-            GET: true
+          edit: {
+            PUT: true
           },
           delete: {
             DELETE: true
           },
-          //  listSectorWeek: { GET: true,
-          //    auth: {
-          //        strategy: 'jwt',
-          //        fail: '/api/schedule/error'
-          //     }
-          // },
-          createScheduleSettings: {
+          createSettings: {
             POST:true
           },
           error: {GET: true }
