@@ -329,37 +329,29 @@
         schedule.sector_id = sector_id
         schedule.profile_id = profile_id
         schedule.save$(function(err,schedule){
+          console.log(schedule.start_time);
+          console.log(schedule.end_time);
+          console.log(schedule.sector_id);
+          console.log(schedule.profile_id);
           respond(null, schedule);
         })
       }
     })
 
-  // #############################################################################
-
-  this.add('role:schedule, cmd:listByProfile', function (msg, respond) {
-    var schedule = this.make(schedule_db);
-    var id = msg.id;
-    console.log("id informado: {}".format(id));
-    schedule.list$(
-    {
-      profile_id: id,
-    },
-    function (error, schedule) {
-      console.log("Schedules:" + schedule);
-      respond(null, schedule);
-    }
-    );
-  })
-
-  // #############################################################################
+    // #############################################################################
 
   this.add('role:schedule,cmd:listByProfile', function (msg, respond) {
     console.log(msg);
     var schedule = this.make(schedule_db);
-    schedule.profile_id = msg.profile_id;
-    start_year = new Date(msg.start_year);
-    end_year = new Date(msg.end_year);
-
+    console.log("Field: profile_id");
+    var profile_id = msg.profile_id;
+    console.log(schedule.profile_id);
+    console.log("Field: start_year");
+    var start_year = new Date(msg.start_year);
+    console.log(start_year);
+    console.log("Field: end_year");
+    var end_year = new Date(msg.end_year);
+    console.log(end_year);
     schedule.list$(
     {
       start_time: {

@@ -144,7 +144,7 @@ function api(options){
       respond(null, result)
     // else, everything success
     } else {
-      this.act('role:schedule,cmd:edit',{
+      this.act('role:schedule,cmd:create',{
         start_time: start_time,
         end_time: end_time,
         sector_id: sector_id,

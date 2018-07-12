@@ -94,7 +94,9 @@ describe('List schedules by profile', function() {
       seneca.act({
         role: "schedule",
         cmd: "listByProfile",
-        id: "131313131313131313131313",
+        profile_id: "131313131313131313131313",
+        start_year: "2018-01-01T00:00",
+        end_year: "2019-01-01T00:00"
       }, function(err, result) {
         expect(result[0].sector_id).to.equal('121212121212121212121212')
         expect(result[0].profile_id).to.equal('131313131313131313131313')
